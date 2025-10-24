@@ -1,0 +1,29 @@
+{
+  "name": "projectpal-fullstack",
+  "version": "1.0.0",
+  "description": "Full-stack AI agent development project",
+  "scripts": {
+    "install:all": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && npm install",
+    "install:frontend": "cd frontend && npm install",
+    "start:backend": "cd backend && npm run server",
+    "start:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run server:dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:frontend": "cd frontend && npm run build",
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CodeSaurabhCode/ProjectPal.git"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "mastra",
+    "astro",
+    "typescript",
+    "project-management"
+  ],
+  "author": "Saurabh Kshirsagar",
+  "license": "MIT"
+}
