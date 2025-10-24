@@ -1,11 +1,62 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
+import Sidebar from '../components/Sidebar.astro';
+import ChatHeader from '../components/Chat/ChatHeader.astro';
+import ChatMessages from '../components/Chat/ChatMessages.astro';
+import ChatInputArea from '../components/Chat/ChatInputArea.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const title = 'ProjectPal - AI Project Manager Assistant';
 ---
 
-<Layout>
-	<Welcome />
+<Layout title={title}>
+	<div class="app-container">
+		<Sidebar />
+		
+		<main class="main-content">
+			<div class="chat-container">
+				<ChatHeader />
+				<ChatMessages />
+				<ChatInputArea />
+			</div>
+		</main>
+	</div>
 </Layout>
+
+<script src="../scripts/chat.ts"></script>
+
+<style>
+	.app-container {
+		display: flex;
+		height: 100vh;
+		width: 100vw;
+	}
+
+	.main-content {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		margin-left: 260px;
+		transition: margin-left 0.3s ease;
+	}
+
+	.main-content.sidebar-collapsed {
+		margin-left: 70px;
+	}
+
+	.chat-container {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		width: 100%;
+		margin: 0 auto;
+		background-color: var(--background-color);
+	}
+
+	@media (max-width: 768px) {
+		.main-content {
+			margin-left: 0 !important;
+		}
+	}
+</style>
+

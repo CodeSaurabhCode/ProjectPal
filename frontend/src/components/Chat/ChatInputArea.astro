@@ -1,0 +1,152 @@
+<div class="chat-input-area">
+	<div class="prompt-suggestions">
+		<div class="suggestion-card" data-prompt="Find available AI engineers">Find available AI engineers</div>
+		<div class="suggestion-card" data-prompt="What are the budget approval requirements?">Budget approval requirements</div>
+		<div class="suggestion-card" data-prompt="Create a project ticket for a new feature">Create a project ticket</div>
+	</div>
+	<form class="chat-input-form" id="chatForm">
+		<textarea 
+			class="chat-input" 
+			id="messageInput" 
+			placeholder="Message ProjectPal..."
+			rows="1"
+			required
+			aria-label="Message input"
+		></textarea>
+		<button type="submit" class="send-button" id="sendButton" title="Send Message" aria-label="Send message">
+			<i class="fas fa-paper-plane"></i>
+		</button>
+	</form>
+</div>
+
+<style>
+	.chat-input-area {
+		padding: 20px 24px;
+		width: 100%;
+		max-width: 960px;
+		margin: 0 auto;
+		position: relative;
+	}
+
+	.prompt-suggestions {
+		display: flex;
+		gap: 12px;
+		margin-bottom: 16px;
+		justify-content: center;
+		flex-wrap: wrap;
+	}
+
+	.suggestion-card {
+		background-color: var(--card-bg);
+		border: 1px solid var(--border-color);
+		padding: 12px 20px;
+		border-radius: 12px;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		font-size: 14px;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+	}
+
+	.suggestion-card:hover {
+		background-color: var(--button-hover-bg);
+		border-color: var(--primary-color);
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0, 121, 107, 0.15);
+	}
+
+	.chat-input-form {
+		display: flex;
+		gap: 12px;
+		align-items: flex-end;
+		background-color: var(--input-background);
+		border-radius: 16px;
+		padding: 12px;
+		border: 2px solid var(--border-color);
+		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+		position: relative;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease;
+	}
+
+	.chat-input-form:focus-within {
+		border-color: var(--primary-color);
+		box-shadow: 0 6px 20px rgba(0, 121, 107, 0.15);
+	}
+
+	.chat-input {
+		flex: 1;
+		padding: 12px 16px;
+		border: none;
+		border-radius: 12px;
+		font-size: 15px;
+		resize: none;
+		background: transparent;
+		color: var(--text-color);
+		max-height: 120px;
+		line-height: 1.6;
+		font-family: inherit;
+	}
+
+	.chat-input:focus {
+		outline: none;
+	}
+
+	.chat-input::placeholder {
+		color: rgba(255, 255, 255, 0.4);
+	}
+
+	.send-button {
+		background: linear-gradient(135deg, #00796b 0%, #004d40 100%);
+		color: white;
+		border: none;
+		border-radius: 12px;
+		width: 48px;
+		height: 48px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+		flex-shrink: 0;
+		font-size: 18px;
+	}
+
+	.send-button:hover:not(:disabled) {
+		transform: scale(1.05);
+		box-shadow: 0 4px 12px rgba(0, 121, 107, 0.3);
+	}
+
+	.send-button:active:not(:disabled) {
+		transform: scale(0.95);
+	}
+
+	.send-button:disabled {
+		background: linear-gradient(135deg, #555 0%, #444 100%);
+		cursor: not-allowed;
+		opacity: 0.6;
+	}
+
+	@media (max-width: 768px) {
+		.chat-input-area {
+			padding: 16px;
+		}
+
+		.prompt-suggestions {
+			gap: 8px;
+			margin-bottom: 12px;
+		}
+
+		.suggestion-card {
+			padding: 10px 16px;
+			font-size: 13px;
+		}
+
+		.chat-input-form {
+			padding: 10px;
+		}
+
+		.send-button {
+			width: 44px;
+			height: 44px;
+		}
+	}
+</style>

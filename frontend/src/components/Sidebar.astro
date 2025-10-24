@@ -1,0 +1,257 @@
+<nav class="sidebar" id="sidebar">
+	<div class="sidebar-header">
+		<div class="logo">
+			<i class="fas fa-project-diagram"></i>
+			<span class="logo-text">ProjectPal</span>
+		</div>
+		<button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+			<i class="fas fa-chevron-left"></i>
+		</button>
+	</div>
+	<div class="sidebar-nav">
+		<ul class="nav-list">
+			<li>
+				<a href="#" class="nav-link" title="Chat Assistant">
+					<i class="fas fa-comments"></i>
+					<span class="nav-text">Chat Assistant</span>
+				</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link" title="Projects">
+					<i class="fas fa-tasks"></i>
+					<span class="nav-text">Projects</span>
+				</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link" title="Team Directory">
+					<i class="fas fa-users"></i>
+					<span class="nav-text">Team Directory</span>
+				</a>
+			</li>
+			<li>
+				<a href="#" class="nav-link" title="PM Handbook">
+					<i class="fas fa-book"></i>
+					<span class="nav-text">PM Handbook</span>
+				</a>
+			</li>
+		</ul>
+	</div>
+	<div class="sidebar-footer">
+		<div class="user-profile">
+			<i class="fas fa-user-circle fa-2x"></i>
+			<span class="user-info">Project Manager</span>
+		</div>
+	</div>
+</nav>
+
+<style>
+	.sidebar {
+		width: 260px;
+		background-color: var(--sidebar-bg);
+		color: white;
+		display: flex;
+		flex-direction: column;
+		transition: width 0.3s ease;
+		z-index: 1000;
+		position: fixed;
+		left: 0;
+		height: 100%;
+		overflow: hidden;
+	}
+
+	.sidebar.collapsed {
+		width: 70px;
+	}
+
+	.sidebar-header {
+		padding: 16px;
+		border-bottom: 1px solid var(--border-color);
+		display: flex;
+		align-items: center;
+		justify-content: flex-start;
+		min-height: 60px;
+		position: relative;
+	}
+
+	.logo {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		font-size: 18px;
+		font-weight: 600;
+		white-space: nowrap;
+		transition: all 0.3s ease;
+		flex: 1;
+	}
+
+	.sidebar.collapsed .logo {
+		justify-content: center;
+	}
+
+	.logo i {
+		font-size: 24px;
+		min-width: 24px;
+	}
+
+	.logo-text {
+		opacity: 1;
+		transition: opacity 0.2s ease;
+	}
+
+	.sidebar.collapsed .logo-text {
+		opacity: 0;
+		width: 0;
+		margin: 0;
+	}
+
+	.sidebar-toggle {
+		background: none;
+		border: none;
+		color: var(--text-color);
+		cursor: pointer;
+		padding: 8px;
+		border-radius: 8px;
+		transition: all 0.3s ease;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: absolute;
+		right: 8px;
+		top: 50%;
+		transform: translateY(-50%);
+	}
+
+	.sidebar.collapsed .sidebar-toggle {
+		opacity: 0;
+		pointer-events: none;
+		right: -100px;
+	}
+
+	.sidebar:hover.collapsed .sidebar-toggle {
+		opacity: 1;
+		pointer-events: auto;
+		right: 8px;
+	}
+
+	.sidebar-toggle:hover {
+		background-color: var(--button-hover-bg);
+	}
+
+	.sidebar-toggle i {
+		transition: transform 0.3s ease;
+	}
+
+	.sidebar.collapsed .sidebar-toggle i {
+		transform: rotate(180deg);
+	}
+
+	.sidebar-nav {
+		flex: 1;
+		padding: 16px 0;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	.nav-list {
+		list-style: none;
+	}
+
+	.nav-link {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		padding: 12px 16px;
+		color: var(--text-color);
+		text-decoration: none;
+		transition: background-color 0.2s ease;
+		border-radius: 8px;
+		margin: 4px 8px;
+		white-space: nowrap;
+		position: relative;
+	}
+
+	.nav-link i {
+		font-size: 20px;
+		min-width: 20px;
+	}
+
+	.nav-text {
+		opacity: 1;
+		transition: opacity 0.2s ease;
+	}
+
+	.sidebar.collapsed .nav-text {
+		opacity: 0;
+		width: 0;
+	}
+
+	.sidebar.collapsed .nav-link {
+		justify-content: center;
+		padding: 12px;
+	}
+
+	.nav-link:hover {
+		background-color: var(--button-hover-bg);
+	}
+
+	.sidebar-footer {
+		padding: 16px;
+		border-top: 1px solid var(--border-color);
+	}
+
+	.user-profile {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.user-profile i {
+		min-width: 32px;
+	}
+
+	.user-info {
+		opacity: 1;
+		transition: opacity 0.2s ease;
+		white-space: nowrap;
+		overflow: hidden;
+	}
+
+	.sidebar.collapsed .user-info {
+		opacity: 0;
+		width: 0;
+	}
+
+	@media (max-width: 768px) {
+		.sidebar {
+			box-shadow: 2px 0 10px rgba(0, 0, 0, 0.5);
+			left: -260px !important;
+			width: 260px !important;
+		}
+
+		.sidebar.active {
+			left: 0 !important;
+		}
+
+		.sidebar.collapsed {
+			width: 260px !important;
+		}
+
+		.sidebar.collapsed .logo-text,
+		.sidebar.collapsed .nav-text,
+		.sidebar.collapsed .user-info {
+			opacity: 1;
+			width: auto;
+		}
+
+		.sidebar.collapsed .sidebar-toggle {
+			opacity: 1;
+			width: auto;
+			padding: 8px;
+		}
+
+		.sidebar.collapsed .nav-link {
+			justify-content: flex-start;
+			padding: 12px 16px;
+		}
+	}
+</style>
