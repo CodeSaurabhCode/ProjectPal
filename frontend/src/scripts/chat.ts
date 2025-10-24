@@ -8,6 +8,7 @@ class ChatApp {
 	private sidebar: HTMLElement;
 	private sidebarToggle: HTMLElement;
 	private mainContent: HTMLElement;
+	private chatContainer: HTMLElement;
 	private isStreaming: boolean = false;
 	private readonly apiUrl: string = 'http://localhost:3001';
 
@@ -19,6 +20,7 @@ class ChatApp {
 		this.sidebar = document.getElementById('sidebar') as HTMLElement;
 		this.sidebarToggle = document.getElementById('sidebarToggle') as HTMLElement;
 		this.mainContent = document.querySelector('.main-content') as HTMLElement;
+		this.chatContainer = document.getElementById('chatContainer') as HTMLElement;
 
 		this.init();
 	}
@@ -44,11 +46,22 @@ class ChatApp {
 			});
 		});
 
-		// Display welcome message
-		this.addMessage(
-			"Hello! I'm ProjectPal, your AI project management assistant. How can I help you today?",
-			'assistant'
-		);
+		// Set initial state as empty
+		this.updateContainerState();
+	}
+
+	/**
+	 * Update container state based on message count
+	 */
+	private updateContainerState(): void {
+		const messageCount = this.messagesContainer.querySelectorAll('.message').length;
+		if (messageCount === 0) {
+			this.chatContainer.classList.add('empty');
+			this.chatContainer.classList.remove('has-messages');
+		} else {
+			this.chatContainer.classList.remove('empty');
+			this.chatContainer.classList.add('has-messages');
+		}
 	}
 
 	/**
@@ -249,6 +262,7 @@ class ChatApp {
 		}
 
 		this.messagesContainer.appendChild(messageDiv);
+		this.updateContainerState();
 		this.scrollToBottom();
 		return messageId;
 	}

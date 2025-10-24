@@ -2,7 +2,7 @@ import { createTool } from '@mastra/core';
 import { z } from 'zod';
 import { MDocument } from '@mastra/rag';
 import fs from 'fs';
-import path from 'path';
+import { envConfig } from '../../config/environment';
 
 interface DocumentChunk {
   text: string;
@@ -50,13 +50,29 @@ function findRelevantChunks(chunks: DocumentChunk[], query: string): DocumentChu
 }
 
 function loadHandbook(): MDocument {
-  const handbookPath = path.join(process.cwd(), 'docs', 'PM_handbook.txt');
-  const handbookContent = fs.readFileSync(handbookPath, 'utf-8');
-  
-  return MDocument.fromText(handbookContent, {
-    id: 'pm-handbook',
-    metadata: { source: 'PM_handbook.txt' }
-  });
+  try {
+    const handbookPath = envConfig.handbookPath;
+    
+    if (!fs.existsSync(handbookPath)) {
+      throw new Error(`Handbook file not found at: ${handbookPath}`);
+    }
+    
+    const handbookContent = fs.readFileSync(handbookPath, 'utf-8');
+    
+    if (!handbookContent || handbookContent.trim().length === 0) {
+      throw new Error('Handbook file is empty');
+    }
+    
+    console.log('[RAG Tool] Loaded handbook from:', handbookPath, '- Size:', handbookContent.length, 'chars');
+    
+    return MDocument.fromText(handbookContent, {
+      id: 'pm-handbook',
+      metadata: { source: 'PM_handbook.txt' }
+    });
+  } catch (error) {
+    console.error('[RAG Tool] Error loading handbook:', error);
+    throw error;
+  }
 }
 
 export const queryHandbook = createTool({
@@ -71,40 +87,50 @@ export const queryHandbook = createTool({
   }),
   execute: async (context): Promise<HandbookQueryResult> => {
     try {
-      // Mastra passes parameters through context object - access via context properties
-      // Using type assertion due to Mastra's dynamic context structure
-      const query = (context as any)?.query || (context as any)?.input?.query;
+      // Extract query from the context - it's in context.context.query
+      const query = (context as any)?.context?.query || (context as any)?.query || (context as any)?.input?.query;
       
       if (!query) {
+        console.error('[RAG Tool] No query provided in context:', context);
         return {
           results: 'No query provided.',
           source: 'Error'
         };
       }
       
+      console.log('[RAG Tool] Querying handbook with:', query);
+      console.log('[RAG Tool] Handbook path:', envConfig.handbookPath);
       
       const doc = loadHandbook();
+      console.log('[RAG Tool] Handbook loaded successfully');
+      
       const chunks = (await doc.chunk(CHUNK_CONFIG)) as unknown as DocumentChunk[];
+      console.log('[RAG Tool] Chunked into', chunks.length, 'chunks');
       
       let relevantChunks = findRelevantChunks(chunks, query);
+      console.log('[RAG Tool] Found', relevantChunks.length, 'relevant chunks');
       
       if (relevantChunks.length === 0) {
         relevantChunks = chunks.slice(0, FALLBACK_CHUNK_COUNT);
+        console.log('[RAG Tool] Using fallback chunks:', FALLBACK_CHUNK_COUNT);
       }
       
       const results = relevantChunks.length > 0
         ? relevantChunks.map(chunk => chunk.text).join('\n\n')
         : 'No relevant information found in the PM Handbook.';
       
+      console.log('[RAG Tool] Returning results, length:', results.length);
+      
       return {
         results,
         source: 'PM_handbook.txt'
       };
     } catch (error) {
-      console.error('Error querying handbook:', error);
+      console.error('[RAG Tool] Error querying handbook:', error);
+      console.error('[RAG Tool] Error stack:', error instanceof Error ? error.stack : 'No stack');
       
       return {
-        results: 'Error accessing the PM Handbook. Please try again.',
+        results: `Error accessing the PM Handbook: ${error instanceof Error ? error.message : 'Unknown error'}`,
         source: 'Error'
       };
     }

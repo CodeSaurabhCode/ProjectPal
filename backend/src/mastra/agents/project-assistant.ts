@@ -2,17 +2,10 @@ import { Agent } from '@mastra/core/agent';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getTeamDirectory, createProjectTicket } from '../tools/directory';
 import { queryHandbook } from '../tools/rag-tool';
-import dotenv from 'dotenv';
-import path from 'path';
-import fs from 'fs';
-
-const envPath = path.join(process.cwd(), '.env');
-if (fs.existsSync(envPath)) {
-  dotenv.config({ path: envPath, override: true });
-}
+import { envConfig } from '../../config/environment';
 
 const openaiClient = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: envConfig.openAIKey
 });
 
 export const projectAssistant = new Agent({

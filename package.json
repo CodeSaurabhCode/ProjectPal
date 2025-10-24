@@ -10,7 +10,7 @@
     "start:frontend": "cd frontend && npm run dev",
     "dev:backend": "cd backend && npm run server:dev",
     "dev:frontend": "cd frontend && npm run dev",
-    "build:frontend": "cd frontend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
   },
   "repository": {
     "type": "git",

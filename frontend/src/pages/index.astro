@@ -13,8 +13,12 @@ const title = 'ProjectPal - AI Project Manager Assistant';
 		<Sidebar />
 		
 		<main class="main-content">
-			<div class="chat-container">
+			<div class="chat-container" id="chatContainer">
 				<ChatHeader />
+				<div class="welcome-section">
+					<h1 class="welcome-title">Hello! I'm ProjectPal</h1>
+					<p class="welcome-subtitle">Your AI project management assistant. How can I help you today?</p>
+				</div>
 				<ChatMessages />
 				<ChatInputArea />
 			</div>
@@ -51,11 +55,104 @@ const title = 'ProjectPal - AI Project Manager Assistant';
 		width: 100%;
 		margin: 0 auto;
 		background-color: var(--background-color);
+		position: relative;
+	}
+
+	.welcome-section {
+		display: none;
+		flex-direction: column;
+		align-items: center;
+		gap: 16px;
+		margin-bottom: 48px;
+		animation: fadeIn 0.5s ease-out;
+	}
+
+	.welcome-icon {
+		width: 80px;
+		height: 80px;
+		background: linear-gradient(135deg, #00796b 0%, #004d40 100%);
+		border-radius: 50%;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 40px;
+		color: white;
+		box-shadow: 0 8px 24px rgba(0, 121, 107, 0.3);
+	}
+
+	.welcome-title {
+		font-size: 32px;
+		font-weight: 600;
+		color: var(--text-color);
+		margin: 0;
+	}
+
+	.welcome-subtitle {
+		font-size: 18px;
+		color: rgba(255, 255, 255, 0.7);
+		margin: 0;
+		text-align: center;
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(-20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	/* Empty state - center the input */
+	.chat-container.empty {
+		justify-content: center;
+	}
+
+	.chat-container.empty .welcome-section {
+		display: flex;
+	}
+
+	.chat-container.empty :global(.chat-header) {
+		display: none;
+	}
+
+	.chat-container.empty :global(.chat-messages) {
+		display: none;
+	}
+
+	.chat-container.empty :global(.chat-input-area) {
+		position: static;
+		margin-top: 0;
+	}
+
+	/* With messages - input at bottom */
+	.chat-container.has-messages :global(.chat-input-area) {
+		position: sticky;
+		bottom: 0;
+		background-color: var(--background-color);
+		border-top: 1px solid var(--border-color);
 	}
 
 	@media (max-width: 768px) {
 		.main-content {
 			margin-left: 0 !important;
+		}
+
+		.welcome-icon {
+			width: 64px;
+			height: 64px;
+			font-size: 32px;
+		}
+
+		.welcome-title {
+			font-size: 24px;
+		}
+
+		.welcome-subtitle {
+			font-size: 16px;
+			padding: 0 16px;
 		}
 	}
 </style>
