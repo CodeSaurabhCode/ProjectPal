@@ -10,7 +10,8 @@ class ChatApp {
 	private mainContent: HTMLElement;
 	private chatContainer: HTMLElement;
 	private isStreaming: boolean = false;
-	private readonly apiUrl: string = 'http://localhost:3001';
+	private currentThreadId: string | null = null;
+	private readonly apiUrl: string = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3001';
 
 	constructor() {
 		this.messagesContainer = document.getElementById('chatMessages') as HTMLElement;
@@ -135,10 +136,15 @@ class ChatApp {
 	 */
 	private async sendMessage(message: string, typingId: string): Promise<void> {
 		try {
+			const requestBody: { message: string; threadId?: string } = { message };
+			if (this.currentThreadId) {
+				requestBody.threadId = this.currentThreadId;
+			}
+
 			const response = await fetch(`${this.apiUrl}/api/chat`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ message }),
+				body: JSON.stringify(requestBody),
 			});
 
 			if (!response.ok) {
@@ -200,6 +206,12 @@ class ChatApp {
 							}
 							// Handle completion
 							else if (parsed.type === 'complete') {
+								// Save threadId for conversation continuity
+								if (parsed.threadId) {
+									this.currentThreadId = parsed.threadId;
+									console.log('💾 Thread ID saved:', this.currentThreadId);
+								}
+
 								if (statusIndicatorId) {
 									this.removeStatusIndicator(statusIndicatorId);
 									statusIndicatorId = null;
@@ -250,7 +262,17 @@ class ChatApp {
 		if (content) {
 			contentDiv.innerHTML = marked.parse(content) as string;
 		} else {
-			contentDiv.classList.add('empty');
+			// Add skeleton loader for empty assistant messages
+			if (type === 'assistant') {
+				contentDiv.classList.add('skeleton-loading');
+				contentDiv.innerHTML = `
+					<div class="skeleton-line skeleton-line-1"></div>
+					<div class="skeleton-line skeleton-line-2"></div>
+					<div class="skeleton-line skeleton-line-3"></div>
+				`;
+			} else {
+				contentDiv.classList.add('empty');
+			}
 		}
 
 		if (type === 'user') {
@@ -275,6 +297,11 @@ class ChatApp {
 		if (messageDiv) {
 			const contentDiv = messageDiv.querySelector('.message-content');
 			if (contentDiv) {
+				// Remove skeleton loader if present
+				if (contentDiv.classList.contains('skeleton-loading')) {
+					contentDiv.classList.remove('skeleton-loading');
+					contentDiv.innerHTML = ''; // Clear skeleton
+				}
 				if (contentDiv.classList.contains('empty')) {
 					contentDiv.classList.remove('empty');
 				}
