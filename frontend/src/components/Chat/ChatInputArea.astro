@@ -1,5 +1,5 @@
 <div class="chat-input-area">
-	<div class="prompt-suggestions">
+	<div class="prompt-suggestions" id="promptSuggestions">
 		<div class="suggestion-card" data-prompt="Find available AI engineers">Find available AI engineers</div>
 		<div class="suggestion-card" data-prompt="What are the budget approval requirements?">Budget approval requirements</div>
 		<div class="suggestion-card" data-prompt="Create a project ticket for a new feature">Create a project ticket</div>
@@ -34,6 +34,16 @@
 		margin-bottom: 16px;
 		justify-content: center;
 		flex-wrap: wrap;
+		transition: opacity 0.3s ease, transform 0.3s ease;
+	}
+
+	.prompt-suggestions.hidden {
+		opacity: 0;
+		transform: translateY(-10px);
+		pointer-events: none;
+		max-height: 0;
+		margin-bottom: 0;
+		overflow: hidden;
 	}
 
 	.suggestion-card {
