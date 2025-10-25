@@ -1,0 +1,126 @@
+name: 'Deploy Applications'
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - '.github/workflows/deploy-apps.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy-backend:
+    name: 'Deploy Backend to Container Apps'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Get ACR name from Terraform
+        id: get-acr
+        run: |
+          cd terraform
+          terraform init
+          ACR_NAME=$(terraform output -raw container_registry_name)
+          ACR_SERVER=$(terraform output -raw container_registry_login_server)
+          echo "acr_name=$ACR_NAME" >> $GITHUB_OUTPUT
+          echo "acr_server=$ACR_SERVER" >> $GITHUB_OUTPUT
+
+      - name: Login to Azure Container Registry
+        run: az acr login --name ${{ steps.get-acr.outputs.acr_name }}
+
+      - name: Build Backend Image
+        run: |
+          docker build -t ${{ steps.get-acr.outputs.acr_server }}/projectpal-backend:${{ github.sha }} \
+                       -t ${{ steps.get-acr.outputs.acr_server }}/projectpal-backend:latest \
+                       ./backend
+
+      - name: Push Backend Image
+        run: |
+          docker push ${{ steps.get-acr.outputs.acr_server }}/projectpal-backend:${{ github.sha }}
+          docker push ${{ steps.get-acr.outputs.acr_server }}/projectpal-backend:latest
+
+      - name: Update Container App
+        run: |
+          BACKEND_NAME=$(cd terraform && terraform output -raw backend_name || echo "projectpal-dev-backend")
+          RG_NAME=$(cd terraform && terraform output -raw resource_group_name || echo "projectpal-dev-rg")
+          
+          az containerapp update \
+            --name $BACKEND_NAME \
+            --resource-group $RG_NAME \
+            --image ${{ steps.get-acr.outputs.acr_server }}/projectpal-backend:${{ github.sha }}
+
+      - name: Summary
+        run: |
+          echo "## Backend Deployment 🚀" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Backend deployed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Image**: \`projectpal-backend:${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: ${{ steps.get-acr.outputs.acr_server }}" >> $GITHUB_STEP_SUMMARY
+
+  deploy-frontend:
+    name: 'Deploy Frontend to Static Web App'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Get Backend URL from Terraform
+        id: get-backend-url
+        run: |
+          cd terraform
+          terraform init
+          BACKEND_URL=$(terraform output -raw backend_url || echo "")
+          echo "backend_url=$BACKEND_URL" >> $GITHUB_OUTPUT
+
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm run build
+        env:
+          PUBLIC_BACKEND_URL: ${{ steps.get-backend-url.outputs.backend_url }}
+
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: 'upload'
+          app_location: '/frontend'
+          output_location: 'dist'
+          skip_app_build: true
+
+      - name: Summary
+        run: |
+          echo "## Frontend Deployment 🌐" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Frontend deployed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platform**: Azure Static Web Apps" >> $GITHUB_STEP_SUMMARY
+          echo "- **Framework**: Astro" >> $GITHUB_STEP_SUMMARY
