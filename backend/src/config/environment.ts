@@ -42,16 +42,61 @@ export class EnvironmentConfig {
     return parseInt(process.env.PORT || '3001', 10);
   }
 
-  get allowedOrigins(): readonly string[] {
-    return [
+  get allowedOrigins(): string[] {
+    const origins = [
       'http://localhost:4321',
       'http://localhost:3000',
       'http://127.0.0.1:4321'
-    ] as const;
+    ];
+
+    // Add custom allowed origins from environment variable
+    const customOrigins = process.env.ALLOWED_ORIGINS;
+    if (customOrigins) {
+      origins.push(...customOrigins.split(',').map(origin => origin.trim()));
+    }
+
+    // In production, allow Azure Static Web Apps domain
+    if (this.isProduction()) {
+      const frontendUrl = process.env.FRONTEND_URL;
+      if (frontendUrl) {
+        origins.push(frontendUrl);
+        // Also add without protocol for flexibility
+        origins.push(`https://${frontendUrl.replace(/^https?:\/\//, '')}`);
+      }
+    }
+
+    return origins;
   }
 
   get handbookPath(): string {
     return path.join(process.cwd(), 'docs', 'PM_handbook.txt');
+  }
+
+  // Memory Storage Configuration
+  get memoryStorageType(): 'file' | 'cosmos' {
+    const type = process.env.MEMORY_STORAGE_TYPE?.toLowerCase();
+    return type === 'cosmos' ? 'cosmos' : 'file';
+  }
+
+  get memoryDir(): string {
+    return process.env.MEMORY_DIR || path.join(process.cwd(), 'memory');
+  }
+
+  // Cosmos DB Configuration
+  get cosmosDbEndpoint(): string | undefined {
+    return process.env.COSMOS_DB_ENDPOINT;
+  }
+
+  get cosmosDbKey(): string | undefined {
+    return process.env.COSMOS_DB_KEY;
+  }
+
+  get cosmosDbDatabase(): string {
+    return process.env.COSMOS_DB_DATABASE || 'ProjectPalDB';
+  }
+
+  get cosmosDbContainer(): string {
+    return process.env.COSMOS_DB_CONTAINER || 'Conversations';
   }
 
   isProduction(): boolean {
