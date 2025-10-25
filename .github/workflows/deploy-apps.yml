@@ -9,6 +9,12 @@ on:
       - 'frontend/**'
       - '.github/workflows/deploy-apps.yml'
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Terraform Apply"]
+    types:
+      - completed
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -21,9 +27,22 @@ env:
   ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
 
 jobs:
+  check-terraform:
+    name: 'Check Terraform Status'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run'
+    steps:
+      - name: Check Terraform Apply Success
+        if: github.event.workflow_run.conclusion != 'success'
+        run: |
+          echo "Terraform Apply failed or was cancelled. Skipping deployment."
+          exit 1
+
   deploy-backend:
     name: 'Deploy Backend to Container Apps'
     runs-on: ubuntu-latest
+    needs: [check-terraform]
+    if: always() && (needs.check-terraform.result == 'success' || github.event_name != 'workflow_run')
     
     steps:
       - name: Checkout
@@ -88,6 +107,8 @@ jobs:
   deploy-frontend:
     name: 'Deploy Frontend to Static Web App'
     runs-on: ubuntu-latest
+    needs: [check-terraform]
+    if: always() && (needs.check-terraform.result == 'success' || github.event_name != 'workflow_run')
     
     steps:
       - name: Checkout

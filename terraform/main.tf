@@ -28,13 +28,13 @@ terraform {
     }
   }
 
-  # Uncomment for remote state (recommended for production)
-  # backend "azurerm" {
-  #   resource_group_name  = "terraform-state-rg"
-  #   storage_account_name = "tfstateprojectpal"
-  #   container_name       = "tfstate"
-  #   key                  = "projectpal.tfstate"
-  # }
+  # Remote state backend in Azure Storage
+  backend "azurerm" {
+    resource_group_name  = "terraform-state-rg"
+    storage_account_name = "tfstateprojectpal123"
+    container_name       = "tfstate"
+    key                  = "projectpal.tfstate"
+  }
 }
 
 # ============================================================================
