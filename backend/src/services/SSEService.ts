@@ -32,6 +32,7 @@ export interface SSEEvent {
   tool?: string;
   response?: string;
   toolCalls?: ToolCall[];
+  threadId?: string;
   error?: string;
   timestamp: string;
   details?: Array<{ field: string; message: string }>;
@@ -93,11 +94,12 @@ export class SSEService {
     });
   }
 
-  sendComplete(res: Response, response: string, toolCalls: ToolCall[] = []): void {
+  sendComplete(res: Response, response: string, toolCalls: ToolCall[] = [], threadId?: string): void {
     this.sendEvent(res, {
       type: 'complete',
       response,
       toolCalls,
+      threadId,
       timestamp: new Date().toISOString()
     });
   }
