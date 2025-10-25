@@ -1,0 +1,96 @@
+# ============================================================================
+# ProjectPal - Terraform Variables Example
+# ============================================================================
+# Copy this file to terraform.tfvars and fill in your values
+# NEVER commit terraform.tfvars to git (it's in .gitignore)
+# ============================================================================
+
+# ============================================================================
+# GENERAL CONFIGURATION
+# ============================================================================
+
+project_name = "projectpal"
+environment  = "dev"  # dev, staging, or prod
+location     = "eastus"
+static_web_app_location = "eastus2"  # Static Web Apps limited availability
+
+tags = {
+  Project     = "ProjectPal"
+  Environment = "dev"
+  ManagedBy   = "Terraform"
+  CostCenter  = "Engineering"
+  Owner       = "your-name@example.com"
+}
+
+# ============================================================================
+# CONTAINER REGISTRY (ACR)
+# ============================================================================
+
+acr_sku = "Basic"  # Basic ($5/mo), Standard ($20/mo), Premium ($50/mo)
+
+# ============================================================================
+# COSMOS DB (DATABASE)
+# ============================================================================
+
+cosmos_database_name  = "projectpal"
+cosmos_container_name = "conversations"
+
+# ============================================================================
+# BLOB STORAGE
+# ============================================================================
+
+storage_container_name = "documents"
+
+# ============================================================================
+# STATIC WEB APP (FRONTEND)
+# ============================================================================
+
+static_web_app_sku = "Free"  # Free ($0/mo) or Standard ($9/mo)
+
+# ============================================================================
+# CONTAINER APPS (BACKEND)
+# ============================================================================
+
+backend_image = "projectpal-backend:latest"
+
+# Resource allocation
+backend_cpu    = 0.5   # 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0
+backend_memory = "1Gi" # Must be in Gi format
+
+# Auto-scaling configuration
+backend_min_replicas = 0  # 0 = scale to zero when idle (save costs)
+backend_max_replicas = 5  # Maximum number of replicas under load
+
+# ============================================================================
+# SECRETS (SENSITIVE) - DO NOT COMMIT
+# ============================================================================
+
+# OpenAI Configuration
+openai_api_key = "sk-your-openai-api-key-here"  # Get from https://platform.openai.com
+openai_model   = "gpt-4o-mini"                   # or gpt-4, gpt-3.5-turbo
+
+# ============================================================================
+# ENVIRONMENT-SPECIFIC EXAMPLES
+# ============================================================================
+
+# DEV ENVIRONMENT (Cost-optimized)
+# backend_cpu          = 0.25
+# backend_memory       = "0.5Gi"
+# backend_min_replicas = 0     # Scale to zero
+# backend_max_replicas = 3
+# acr_sku             = "Basic"
+
+# STAGING ENVIRONMENT (Moderate)
+# backend_cpu          = 0.5
+# backend_memory       = "1Gi"
+# backend_min_replicas = 1     # Always 1 running
+# backend_max_replicas = 5
+# acr_sku             = "Basic"
+
+# PRODUCTION ENVIRONMENT (Performance)
+# backend_cpu          = 1.0
+# backend_memory       = "2Gi"
+# backend_min_replicas = 2     # Always 2 running
+# backend_max_replicas = 10
+# acr_sku             = "Standard"
+# static_web_app_sku  = "Standard"  # Better performance
