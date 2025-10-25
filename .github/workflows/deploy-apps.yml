@@ -9,19 +9,50 @@ on:
       - 'frontend/**'
       - '.github/workflows/deploy-apps.yml'
   workflow_dispatch:
+  workflow_run:
+    workflows: ["Terraform Apply"]
+    types:
+      - completed
+    branches:
+      - main
 
 permissions:
   contents: read
   id-token: write
 
+env:
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
 jobs:
+  check-terraform:
+    name: 'Check Terraform Status'
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_run'
+    steps:
+      - name: Check Terraform Apply Success
+        if: github.event.workflow_run.conclusion != 'success'
+        run: |
+          echo "Terraform Apply failed or was cancelled. Skipping deployment."
+          exit 1
+
   deploy-backend:
     name: 'Deploy Backend to Container Apps'
     runs-on: ubuntu-latest
+    needs: [check-terraform]
+    if: always() && (needs.check-terraform.result == 'success' || github.event_name != 'workflow_run')
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
+          terraform_wrapper: false
 
       - name: Login to Azure
         uses: azure/login@v1
@@ -54,8 +85,10 @@ jobs:
 
       - name: Update Container App
         run: |
-          BACKEND_NAME=$(cd terraform && terraform output -raw backend_name || echo "projectpal-dev-backend")
-          RG_NAME=$(cd terraform && terraform output -raw resource_group_name || echo "projectpal-dev-rg")
+          cd terraform
+          terraform init
+          BACKEND_NAME=$(terraform output -raw backend_name || echo "projectpal-dev-backend")
+          RG_NAME=$(terraform output -raw resource_group_name || echo "projectpal-dev-rg")
           
           az containerapp update \
             --name $BACKEND_NAME \
@@ -74,10 +107,18 @@ jobs:
   deploy-frontend:
     name: 'Deploy Frontend to Static Web App'
     runs-on: ubuntu-latest
+    needs: [check-terraform]
+    if: always() && (needs.check-terraform.result == 'success' || github.event_name != 'workflow_run')
     
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.13.3
+          terraform_wrapper: false
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

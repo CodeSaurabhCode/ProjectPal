@@ -9,6 +9,7 @@ class ChatApp {
 	private sidebarToggle: HTMLElement;
 	private mainContent: HTMLElement;
 	private chatContainer: HTMLElement;
+	private promptSuggestions: HTMLElement | null;
 	private isStreaming: boolean = false;
 	private currentThreadId: string | null = null;
 	private readonly apiUrl: string = import.meta.env.PUBLIC_BACKEND_URL || 'http://localhost:3001';
@@ -22,6 +23,7 @@ class ChatApp {
 		this.sidebarToggle = document.getElementById('sidebarToggle') as HTMLElement;
 		this.mainContent = document.querySelector('.main-content') as HTMLElement;
 		this.chatContainer = document.getElementById('chatContainer') as HTMLElement;
+		this.promptSuggestions = document.getElementById('promptSuggestions');
 
 		this.init();
 	}
@@ -66,6 +68,15 @@ class ChatApp {
 	}
 
 	/**
+	 * Hide suggestion cards
+	 */
+	private hideSuggestions(): void {
+		if (this.promptSuggestions) {
+			this.promptSuggestions.classList.add('hidden');
+		}
+	}
+
+	/**
 	 * Toggle sidebar visibility
 	 */
 	private toggleSidebar(): void {
@@ -105,6 +116,9 @@ class ChatApp {
 		e.preventDefault();
 		const message = this.messageInput.value.trim();
 		if (!message || this.isStreaming) return;
+
+		// Hide suggestion cards after first message
+		this.hideSuggestions();
 
 		this.addMessage(message, 'user');
 		this.messageInput.value = '';
