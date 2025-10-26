@@ -7,3 +7,5 @@ dist
 *.db 
 *.db-* 
 memory/
+embeddings/
+docs/uploads/
