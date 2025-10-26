@@ -87,7 +87,6 @@ export const queryHandbook = createTool({
   }),
   execute: async (context): Promise<HandbookQueryResult> => {
     try {
-      // Extract query from the context - it's in context.context.query
       const query = (context as any)?.context?.query || (context as any)?.query || (context as any)?.input?.query;
       
       if (!query) {

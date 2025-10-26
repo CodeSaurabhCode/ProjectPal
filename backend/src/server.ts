@@ -5,6 +5,10 @@ import { projectAssistant } from './mastra/agents/project-assistant';
 import { SSEService, type ToolCall } from './services/SSEService';
 import { envConfig } from './config/environment';
 import { getMemoryStore } from './storage/MemoryStoreFactory';
+import { DocumentStorageService } from './services/DocumentStorageService';
+import { RAGService } from './services/RAGService';
+import { DocumentTrackingService } from './services/DocumentTrackingService';
+import documentRoutes from './routes/documents';
 import type { Message } from './types/memory.types';
 
 const ChatRequestSchema = z.object({
@@ -26,6 +30,20 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+(async () => {
+  try {
+    console.log('🔧 Initializing services...');
+    await DocumentStorageService.initialize();
+    await DocumentTrackingService.initialize();
+    await RAGService.initialize();
+    console.log('✅ Services initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize services:', error);
+  }
+})();
+
+app.use('/api/documents', documentRoutes);
 
 
 app.post('/api/chat', async (req: Request, res: Response) => {
