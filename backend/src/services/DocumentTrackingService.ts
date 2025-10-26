@@ -100,8 +100,8 @@ export class DocumentTrackingService {
 
     if (this.blobContainerClient) {
       // Use blob storage (production)
-      const blobClient = this.blobContainerClient.getBlobClient(this.BLOB_TRACKING_FILE);
-      await blobClient.upload(jsonContent, jsonContent.length, {
+      const blockBlobClient = this.blobContainerClient.getBlockBlobClient(this.BLOB_TRACKING_FILE);
+      await blockBlobClient.upload(jsonContent, jsonContent.length, {
         blobHTTPHeaders: { blobContentType: 'application/json' }
       });
       console.log('[DocumentTracking] Saved tracking to blob storage');
