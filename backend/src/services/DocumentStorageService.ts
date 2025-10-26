@@ -48,10 +48,9 @@ export class DocumentStorageService {
     const blobServiceClient = BlobServiceClient.fromConnectionString(connectionString);
     const containerName = envConfig.blobStorageContainerName || 'documents';
     
-    // Create container if it doesn't exist
     this.blobContainerClient = blobServiceClient.getContainerClient(containerName);
     await this.blobContainerClient.createIfNotExists({
-      access: 'blob' // Allow public read access to blobs
+      access: 'blob'
     });
 
     console.log('[DocumentStorage] Blob container ready:', containerName);

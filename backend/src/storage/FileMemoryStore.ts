@@ -3,10 +3,6 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { IMemoryStore, ConversationThread, Message } from '../types/memory.types';
 
-/**
- * File-based memory store for local development
- * Stores conversations in JSON files
- */
 export class FileMemoryStore implements IMemoryStore {
   private memoryDir: string;
 
@@ -15,9 +11,6 @@ export class FileMemoryStore implements IMemoryStore {
     this.ensureMemoryDirectory();
   }
 
-  /**
-   * Ensure memory directory exists
-   */
   private ensureMemoryDirectory(): void {
     if (!fs.existsSync(this.memoryDir)) {
       fs.mkdirSync(this.memoryDir, { recursive: true });
@@ -25,16 +18,10 @@ export class FileMemoryStore implements IMemoryStore {
     }
   }
 
-  /**
-   * Get file path for a thread
-   */
   private getThreadFilePath(threadId: string): string {
     return path.join(this.memoryDir, `${threadId}.json`);
   }
 
-  /**
-   * Get conversation thread by ID
-   */
   async getThread(threadId: string): Promise<ConversationThread | null> {
     try {
       const filePath = this.getThreadFilePath(threadId);
@@ -46,7 +33,6 @@ export class FileMemoryStore implements IMemoryStore {
       const data = fs.readFileSync(filePath, 'utf-8');
       const thread = JSON.parse(data);
       
-      // Convert date strings back to Date objects
       thread.createdAt = new Date(thread.createdAt);
       thread.updatedAt = new Date(thread.updatedAt);
       thread.messages = thread.messages.map((msg: Message) => ({
@@ -61,9 +47,6 @@ export class FileMemoryStore implements IMemoryStore {
     }
   }
 
-  /**
-   * Create a new conversation thread
-   */
   async createThread(userId?: string, metadata?: Record<string, unknown>): Promise<ConversationThread> {
     const threadId = uuidv4();
     const now = new Date();
@@ -83,9 +66,6 @@ export class FileMemoryStore implements IMemoryStore {
     return thread;
   }
 
-  /**
-   * Save thread to file
-   */
   private async saveThread(thread: ConversationThread): Promise<void> {
     try {
       const filePath = this.getThreadFilePath(thread.threadId);
@@ -96,9 +76,6 @@ export class FileMemoryStore implements IMemoryStore {
     }
   }
 
-  /**
-   * Add a message to a thread
-   */
   async addMessage(threadId: string, message: Message): Promise<void> {
     const thread = await this.getThread(threadId);
     
@@ -112,9 +89,6 @@ export class FileMemoryStore implements IMemoryStore {
     await this.saveThread(thread);
   }
 
-  /**
-   * Get recent messages from a thread
-   */
   async getRecentMessages(threadId: string, limit: number = 10): Promise<Message[]> {
     const thread = await this.getThread(threadId);
     
@@ -125,9 +99,6 @@ export class FileMemoryStore implements IMemoryStore {
     return thread.messages.slice(-limit);
   }
 
-  /**
-   * Delete a thread
-   */
   async deleteThread(threadId: string): Promise<void> {
     try {
       const filePath = this.getThreadFilePath(threadId);
@@ -142,9 +113,6 @@ export class FileMemoryStore implements IMemoryStore {
     }
   }
 
-  /**
-   * Get all threads for a user
-   */
   async getUserThreads(userId: string): Promise<ConversationThread[]> {
     try {
       const files = fs.readdirSync(this.memoryDir);

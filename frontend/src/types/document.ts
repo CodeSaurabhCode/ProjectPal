@@ -1,7 +1,3 @@
-/**
- * Document types for PM Handbook functionality
- */
-
 export interface Document {
   id: string;
   filename: string;

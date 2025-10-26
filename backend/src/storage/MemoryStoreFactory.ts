@@ -3,16 +3,9 @@ import { FileMemoryStore } from './FileMemoryStore';
 import { CosmosMemoryStore } from './CosmosMemoryStore';
 import { envConfig } from '../config/environment';
 
-/**
- * Memory store factory
- * Creates appropriate memory store based on environment configuration
- */
 export class MemoryStoreFactory {
   private static instance: IMemoryStore | null = null;
 
-  /**
-   * Get memory store instance (singleton)
-   */
   static getInstance(): IMemoryStore {
     if (this.instance) {
       return this.instance;
@@ -46,17 +39,11 @@ export class MemoryStoreFactory {
     return this.instance;
   }
 
-  /**
-   * Reset instance (useful for testing)
-   */
   static reset(): void {
     this.instance = null;
   }
 }
 
-/**
- * Get the memory store instance
- */
 export function getMemoryStore(): IMemoryStore {
   return MemoryStoreFactory.getInstance();
 }

@@ -48,22 +48,18 @@ router.post('/upload', upload.single('document'), async (req: Request, res: Resp
     if (req.file.mimetype === 'text/plain' || req.file.mimetype === 'text/markdown') {
       textContent = req.file.buffer.toString('utf-8');
     } else {
-      // For PDFs and other formats, you'd need to add parsing libraries
       return res.status(400).json({ 
         error: 'PDF and DOCX parsing not yet implemented. Please upload .txt or .md files for now.',
         document: documentMetadata 
       });
     }
 
-    // 3. Process document using Mastra RAG (chunking + embedding + storage)
-    // All documents go into the 'pm-handbook' index
     console.log('[DocumentAPI] Processing document with Mastra RAG...');
     const stats = await RAGService.processDocument(textContent, documentMetadata.id, {
       maxSize: 4000,
       overlap: 500,
     });
 
-    // 4. Track document and its chunks
     await DocumentTrackingService.addDocument(
       documentMetadata.id,
       documentMetadata.originalName,
@@ -117,8 +113,6 @@ router.get('/:filename', async (req: Request, res: Response) => {
     console.log('[DocumentAPI] Downloading document:', filename);
 
     const fileBuffer = await DocumentStorageService.getDocument(filename);
-    
-    // Get metadata to set proper content type
     const documents = await DocumentStorageService.listDocuments();
     const document = documents.find(d => d.filename === filename);
 
@@ -143,16 +137,13 @@ router.delete('/:filename', async (req: Request, res: Response) => {
     const { filename } = req.params;
     console.log('[DocumentAPI] Deleting document:', filename);
 
-    // Get chunk IDs from tracking service
     const chunkIds = await DocumentTrackingService.removeDocument(filename);
     
     if (chunkIds.length > 0) {
-      // Delete specific chunks from pm-handbook index
       await RAGService.deleteDocumentChunks(chunkIds);
       console.log(`[DocumentAPI] Deleted ${chunkIds.length} chunks from pm-handbook index`);
     }
     
-    // Delete document from storage
     await DocumentStorageService.deleteDocument(filename);
 
     res.json({

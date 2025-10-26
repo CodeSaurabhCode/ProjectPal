@@ -26,8 +26,6 @@ export class DocumentTrackingService {
   private static blobContainerClient: any = null;
 
   static async initialize(): Promise<void> {
-    // Initialize blob storage if we have blob storage configured (production)
-    // Check for blob storage connection string from either BLOB_STORAGE_CONNECTION_STRING or construct from account name/key
     const accountName = process.env.STORAGE_ACCOUNT_NAME;
     const accountKey = process.env.STORAGE_ACCOUNT_KEY;
     const connectionString = envConfig.blobStorageConnectionString;
@@ -41,7 +39,6 @@ export class DocumentTrackingService {
         console.log('[DocumentTracking] Blob storage initialized for tracking');
       } catch (error) {
         console.error('[DocumentTracking] Error initializing blob storage:', error);
-        // Fall back to local storage
         console.warn('[DocumentTracking] Falling back to local storage');
       }
     }
@@ -53,13 +50,11 @@ export class DocumentTrackingService {
       let content: string;
       
       if (this.blobContainerClient) {
-        // Use blob storage (production)
         const blobClient = this.blobContainerClient.getBlobClient(this.BLOB_TRACKING_FILE);
         const downloadResponse = await blobClient.download();
         content = await this.streamToString(downloadResponse.readableStreamBody!);
         console.log('[DocumentTracking] Loaded tracking from blob storage');
       } else {
-        // Use local file system (development)
         content = await fs.readFile(this.LOCAL_TRACKING_FILE, 'utf-8');
         console.log('[DocumentTracking] Loaded tracking from local file');
       }
@@ -67,7 +62,6 @@ export class DocumentTrackingService {
       this.trackingData = JSON.parse(content);
       console.log('[DocumentTracking] Loaded tracking data:', this.trackingData?.totalDocuments, 'documents');
     } catch (error) {
-      // File doesn't exist, create new tracking data
       this.trackingData = {
         documents: {},
         totalChunks: 0,
@@ -99,14 +93,12 @@ export class DocumentTrackingService {
     const jsonContent = JSON.stringify(this.trackingData, null, 2);
 
     if (this.blobContainerClient) {
-      // Use blob storage (production)
       const blockBlobClient = this.blobContainerClient.getBlockBlobClient(this.BLOB_TRACKING_FILE);
       await blockBlobClient.upload(jsonContent, jsonContent.length, {
         blobHTTPHeaders: { blobContentType: 'application/json' }
       });
       console.log('[DocumentTracking] Saved tracking to blob storage');
     } else {
-      // Use local file system (development)
       const dir = path.dirname(this.LOCAL_TRACKING_FILE);
       await fs.mkdir(dir, { recursive: true });
       await fs.writeFile(this.LOCAL_TRACKING_FILE, jsonContent, 'utf-8');
@@ -183,9 +175,6 @@ export class DocumentTrackingService {
     return Object.values(this.trackingData!.documents);
   }
 
-  /**
-   * Get tracking stats
-   */
   static async getStats(): Promise<{
     totalDocuments: number;
     totalChunks: number;

@@ -1,9 +1,3 @@
-/**
- * Navigation Script
- * Handles tab switching between Chat, Handbook, Projects, and Team
- */
-
-// Tab mapping
 const TAB_MAP: Record<string, string> = {
   chat: 'chatTab',
   handbook: 'handbookTab',
@@ -11,13 +5,9 @@ const TAB_MAP: Record<string, string> = {
   team: 'teamTab',
 };
 
-/**
- * Initialize navigation
- */
 function initializeNavigation() {
   console.log('[Navigation] Initializing...');
   
-  // Get all nav links
   const navLinks = document.querySelectorAll('.nav-link[data-tab]');
   
   navLinks.forEach((link) => {
@@ -31,7 +21,6 @@ function initializeNavigation() {
     });
   });
   
-  // Check URL hash for initial tab
   const hash = window.location.hash.substring(1);
   if (hash && TAB_MAP[hash]) {
     switchTab(hash);
@@ -40,9 +29,6 @@ function initializeNavigation() {
   console.log('[Navigation] Initialized');
 }
 
-/**
- * Switch to a specific tab
- */
 function switchTab(tabName: string) {
   console.log('[Navigation] Switching to tab:', tabName);
   
@@ -51,8 +37,7 @@ function switchTab(tabName: string) {
     console.error('[Navigation] Invalid tab:', tabName);
     return;
   }
-  
-  // Update nav links
+
   const navLinks = document.querySelectorAll('.nav-link[data-tab]');
   navLinks.forEach((link) => {
     const linkTab = (link as HTMLElement).dataset.tab;
@@ -62,8 +47,7 @@ function switchTab(tabName: string) {
       link.classList.remove('active');
     }
   });
-  
-  // Update tab content
+
   const tabContents = document.querySelectorAll('.tab-content');
   tabContents.forEach((content) => {
     if (content.id === tabId) {
@@ -72,17 +56,14 @@ function switchTab(tabName: string) {
       content.classList.remove('active');
     }
   });
-  
-  // Update URL hash (without scrolling)
+
   history.pushState(null, '', `#${tabName}`);
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeNavigation);
 } else {
   initializeNavigation();
 }
 
-// Export for external use
 export { switchTab };

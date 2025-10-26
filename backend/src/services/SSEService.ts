@@ -11,17 +11,10 @@ export type SSEEventType =
 export type ProcessingStatus = 'thinking' | 'tool_use' | 'generating';
 
 export interface ToolCall {
-  id?: string;
-  toolName?: string;
-  name?: string;
-  toolCallId?: string;
-  tool?: {
-    name?: string;
-  };
-  function?: {
-    name?: string;
-  };
-  [key: string]: unknown;
+  id: string;
+  name: string;
+  args: Record<string, unknown>;
+  result?: unknown;
 }
 
 export interface SSEEvent {
@@ -121,19 +114,6 @@ export class SSEService {
     res.end();
   }
 
-  extractToolName(toolCall: ToolCall): string {
-    const possibleNames = [
-      toolCall.id,
-      toolCall.toolName,
-      toolCall.name,
-      toolCall.tool?.name,
-      toolCall.function?.name,
-      toolCall.toolCallId
-    ];
-    
-    return possibleNames.find(name => name && typeof name === 'string') || 'Processing tool';
-  }
-
   async streamTextChunks(res: Response, text: string): Promise<void> {
     const words = text.split(' ');
     for (let i = 0; i < words.length; i += this.config.chunkSize) {
@@ -143,35 +123,6 @@ export class SSEService {
       this.sendChunk(res, chunk + (hasMore ? ' ' : ''));
       await this.delay(this.config.chunkDelayMs);
     }
-  }
-
-  async streamResponse(
-    res: Response,
-    responseText: string,
-    toolCalls: ToolCall[] = []
-  ): Promise<void> {
-    this.sendStatus(res, 'thinking', '🤔 Analyzing your request...');
-
-    if (toolCalls.length > 0) {
-      for (const toolCall of toolCalls) {
-        const toolName = this.extractToolName(toolCall);
-        this.sendStatus(res, 'tool_use', `🔧 Using tool: ${toolName}`, toolName);
-        await this.delay(this.config.toolStatusDelayMs);
-      }
-    }
-
-    this.sendStatus(res, 'generating', '✍️ Generating response...');
-
-    const words = responseText.split(' ');
-    for (let i = 0; i < words.length; i += this.config.chunkSize) {
-      const chunk = words.slice(i, i + this.config.chunkSize).join(' ');
-      const hasMore = i + this.config.chunkSize < words.length;
-      
-      this.sendChunk(res, chunk + (hasMore ? ' ' : ''));
-      await this.delay(this.config.chunkDelayMs);
-    }
-
-    this.sendComplete(res, responseText, toolCalls);
   }
 
   private delay(ms: number): Promise<void> {

@@ -1,8 +1,3 @@
-/**
- * Document Management Script
- * Handles document upload, list, download, and delete functionality
- */
-
 import {
   uploadDocument,
   listDocuments,
@@ -13,7 +8,6 @@ import {
 } from '../services/documentApi';
 import type { Document, UploadProgress } from '../types/document';
 
-// DOM Elements
 let uploadArea: HTMLElement;
 let fileInput: HTMLInputElement;
 let browseBtnuploadBtn: HTMLButtonElement;
@@ -27,16 +21,11 @@ let documentsGrid: HTMLElement;
 let documentsCount: HTMLElement;
 let retryBtn: HTMLButtonElement;
 
-// State
 let documents: Document[] = [];
 
-/**
- * Initialize the document management functionality
- */
 export function initializeDocumentManagement() {
   console.log('[DocumentManagement] Initializing...');
-  
-  // Get DOM elements
+
   uploadArea = document.getElementById('uploadArea') as HTMLElement;
   fileInput = document.getElementById('fileInput') as HTMLInputElement;
   browseBtnuploadBtn = document.getElementById('browseBtnuploadBtn') as HTMLButtonElement;
@@ -54,36 +43,28 @@ export function initializeDocumentManagement() {
     console.error('[DocumentManagement] Required elements not found');
     return;
   }
-  
-  // Set up event listeners
+
   setupUploadListeners();
   setupDocumentListeners();
-  
-  // Load documents
+
   loadDocuments();
   
   console.log('[DocumentManagement] Initialized');
 }
 
-/**
- * Set up upload-related event listeners
- */
 function setupUploadListeners() {
-  // Browse button click
   browseBtnuploadBtn?.addEventListener('click', () => {
     fileInput.click();
   });
-  
-  // File input change
+
   fileInput.addEventListener('change', (e) => {
     const target = e.target as HTMLInputElement;
     if (target.files && target.files.length > 0) {
       handleFiles(Array.from(target.files));
-      target.value = ''; // Reset input
+      target.value = '';
     }
   });
-  
-  // Drag and drop
+
   uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
     uploadArea.classList.add('drag-over');
@@ -104,23 +85,17 @@ function setupUploadListeners() {
   });
 }
 
-/**
- * Set up document list event listeners
- */
 function setupDocumentListeners() {
-  // Retry button
   retryBtn?.addEventListener('click', () => {
     loadDocuments();
   });
-  
-  // Event delegation for document actions
+
   documentsGrid?.addEventListener('click', async (e) => {
     const target = e.target as HTMLElement;
     const button = target.closest('button');
     
     if (!button) return;
-    
-    // Download button
+
     if (button.classList.contains('download-btn')) {
       const filename = button.dataset.filename;
       const originalName = button.dataset.originalName;
@@ -128,8 +103,7 @@ function setupDocumentListeners() {
         await handleDownload(filename, originalName);
       }
     }
-    
-    // Delete button
+
     if (button.classList.contains('delete-btn')) {
       const filename = button.dataset.filename;
       if (filename && confirm('Are you sure you want to delete this document?')) {
@@ -139,26 +113,19 @@ function setupDocumentListeners() {
   });
 }
 
-/**
- * Handle file uploads
- */
 async function handleFiles(files: File[]) {
   console.log('[DocumentManagement] Uploading', files.length, 'files');
-  
-  // Hide placeholder, show progress list
+
   uploadPlaceholder.style.display = 'none';
   uploadProgressList.style.display = 'block';
   uploadProgressList.innerHTML = '';
-  
-  // Upload each file
+
   for (const file of files) {
     await uploadFile(file);
   }
-  
-  // Reload documents after all uploads
+
   await loadDocuments();
-  
-  // Reset UI after a delay
+
   setTimeout(() => {
     uploadPlaceholder.style.display = 'block';
     uploadProgressList.style.display = 'none';
@@ -166,11 +133,7 @@ async function handleFiles(files: File[]) {
   }, 3000);
 }
 
-/**
- * Upload a single file
- */
 async function uploadFile(file: File) {
-  // Create progress item
   const progressItem = createProgressItem(file.name);
   uploadProgressList.appendChild(progressItem);
   
@@ -179,13 +142,11 @@ async function uploadFile(file: File) {
   const statusText = progressItem.querySelector('.upload-status-text') as HTMLElement;
   
   try {
-    // Upload with progress tracking
     await uploadDocument(file, (progress: UploadProgress) => {
       progressBar.style.width = `${progress.percentage}%`;
       progressText.textContent = `${progress.percentage}%`;
     });
-    
-    // Success
+
     progressBar.style.width = '100%';
     progressText.textContent = '100%';
     statusText.textContent = 'Upload complete! Processing embeddings...';
@@ -194,7 +155,6 @@ async function uploadFile(file: File) {
     showUploadStatus(`Successfully uploaded ${file.name}`, false);
     
   } catch (error) {
-    // Error
     statusText.textContent = `Error: ${error instanceof Error ? error.message : 'Upload failed'}`;
     statusText.classList.add('error');
     
@@ -203,9 +163,6 @@ async function uploadFile(file: File) {
   }
 }
 
-/**
- * Create progress item element
- */
 function createProgressItem(fileName: string): HTMLElement {
   const item = document.createElement('div');
   item.className = 'upload-progress-item';
@@ -222,9 +179,6 @@ function createProgressItem(fileName: string): HTMLElement {
   return item;
 }
 
-/**
- * Show upload status message
- */
 function showUploadStatus(message: string, isError: boolean) {
   uploadStatus.style.display = 'flex';
   uploadStatus.classList.toggle('error', isError);
@@ -235,19 +189,14 @@ function showUploadStatus(message: string, isError: boolean) {
   statusMessage.textContent = message;
   statusIcon.className = isError ? 'fas fa-exclamation-circle' : 'fas fa-check-circle';
   
-  // Auto-hide after 5 seconds
   setTimeout(() => {
     uploadStatus.style.display = 'none';
   }, 5000);
 }
 
-/**
- * Load and display documents
- */
 async function loadDocuments() {
   console.log('[DocumentManagement] Loading documents...');
-  
-  // Show loading state
+
   documentsLoading.style.display = 'block';
   documentsEmpty.style.display = 'none';
   documentsError.style.display = 'none';
@@ -256,11 +205,9 @@ async function loadDocuments() {
   try {
     documents = await listDocuments();
     console.log('[DocumentManagement] Loaded', documents.length, 'documents');
-    
-    // Update count
+
     updateDocumentCount(documents.length);
-    
-    // Show appropriate state
+
     documentsLoading.style.display = 'none';
     
     if (documents.length === 0) {
@@ -281,13 +228,9 @@ async function loadDocuments() {
   }
 }
 
-/**
- * Render documents in the grid
- */
 function renderDocuments(docs: Document[]) {
   documentsGrid.innerHTML = docs.map(doc => createDocumentCard(doc)).join('');
-  
-  // Update metadata (file size and date)
+
   docs.forEach(doc => {
     const card = documentsGrid.querySelector(`[data-document-id="${doc.id}"]`);
     if (card) {
@@ -300,9 +243,7 @@ function renderDocuments(docs: Document[]) {
   });
 }
 
-/**
- * Create document card HTML
- */
+
 function createDocumentCard(doc: Document): string {
   const fileExtension = doc.originalName.split('.').pop()?.toUpperCase() || 'FILE';
   const fileIcon = getFileIcon(doc.mimeType);
@@ -348,9 +289,6 @@ function createDocumentCard(doc: Document): string {
   `;
 }
 
-/**
- * Get file icon based on mime type
- */
 function getFileIcon(mimeType: string): string {
   if (mimeType.includes('pdf')) return 'fa-file-pdf';
   if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
@@ -359,9 +297,6 @@ function getFileIcon(mimeType: string): string {
   return 'fa-file';
 }
 
-/**
- * Update document count display
- */
 function updateDocumentCount(count: number) {
   const countNumber = documentsCount.querySelector('.count-number') as HTMLElement;
   const countLabel = documentsCount.querySelector('.count-label') as HTMLElement;
@@ -370,9 +305,6 @@ function updateDocumentCount(count: number) {
   if (countLabel) countLabel.textContent = count === 1 ? 'document' : 'documents';
 }
 
-/**
- * Handle document download
- */
 async function handleDownload(filename: string, originalName: string) {
   try {
     console.log('[DocumentManagement] Downloading:', originalName);
@@ -383,15 +315,11 @@ async function handleDownload(filename: string, originalName: string) {
   }
 }
 
-/**
- * Handle document delete
- */
 async function handleDelete(filename: string) {
   try {
     console.log('[DocumentManagement] Deleting:', filename);
     await deleteDocument(filename);
-    
-    // Reload documents
+
     await loadDocuments();
     
     showUploadStatus('Document deleted successfully', false);
@@ -401,7 +329,6 @@ async function handleDelete(filename: string) {
   }
 }
 
-// Initialize when DOM is ready
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initializeDocumentManagement);
 } else {

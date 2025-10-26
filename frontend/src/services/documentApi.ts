@@ -1,8 +1,3 @@
-/**
- * API Service for Document Management
- * Handles all HTTP requests to the backend document endpoints
- */
-
 import type {
   Document,
   DocumentUploadResponse,
@@ -15,9 +10,6 @@ const API_BASE_URL = import.meta.env.PUBLIC_BACKEND_URL
   ? `${import.meta.env.PUBLIC_BACKEND_URL}/api`
   : 'http://localhost:3001/api';
 
-/**
- * Upload a document file
- */
 export async function uploadDocument(
   file: File,
   onProgress?: (progress: UploadProgress) => void
@@ -28,7 +20,6 @@ export async function uploadDocument(
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
-    // Track upload progress
     if (onProgress) {
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
@@ -72,9 +63,6 @@ export async function uploadDocument(
   });
 }
 
-/**
- * List all documents
- */
 export async function listDocuments(): Promise<Document[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/documents`);
@@ -96,9 +84,6 @@ export async function listDocuments(): Promise<Document[]> {
   }
 }
 
-/**
- * Download a document
- */
 export async function downloadDocument(filename: string, originalName: string): Promise<void> {
   try {
     const response = await fetch(`${API_BASE_URL}/documents/${encodeURIComponent(filename)}`);
@@ -122,9 +107,6 @@ export async function downloadDocument(filename: string, originalName: string): 
   }
 }
 
-/**
- * Delete a document
- */
 export async function deleteDocument(filename: string): Promise<void> {
   try {
     const response = await fetch(
@@ -147,9 +129,6 @@ export async function deleteDocument(filename: string): Promise<void> {
   }
 }
 
-/**
- * Format file size for display
- */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 Bytes';
   
@@ -160,9 +139,6 @@ export function formatFileSize(bytes: number): string {
   return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
 }
 
-/**
- * Format date for display
- */
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();

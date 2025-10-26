@@ -37,7 +37,7 @@ export class RAGService {
 
   static async processDocument(
     text: string,
-    documentId: string, // Document identifier for tracking
+    documentId: string,
     options?: {
       maxSize?: number;
       overlap?: number;
@@ -45,8 +45,6 @@ export class RAGService {
   ): Promise<ProcessingStats> {
     const startTime = Date.now();
     const { maxSize = 4000, overlap = 500 } = options || {};
-    
-    // Always use 'pm-handbook' as the index name
     const indexName = 'pm-handbook';
     
     console.log(`[RAGService] Processing document: ${documentId} into index: ${indexName}`);
@@ -64,15 +62,13 @@ export class RAGService {
     
     console.log(`[RAGService] Generated ${embeddings.length} embeddings`);
     
-    // Create metadata with document source
     const metadata = chunks.map((chunk, idx) => ({
       text: chunk.text,
-      documentId, // Track which document this chunk belongs to
+      documentId,
       chunkIndex: idx,
       ...chunk.metadata,
     }));
     
-    // Generate chunk IDs
     const chunkIds = chunks.map((_, idx) => `${documentId}-chunk-${idx}`);
     
     await vectorStore.upsert({
@@ -135,9 +131,6 @@ export class RAGService {
     console.log(`[RAGService] ✅ Index deleted: ${indexName}`);
   }
 
-  /**
-   * Delete specific document chunks from pm-handbook index
-   */
   static async deleteDocumentChunks(chunkIds: string[]): Promise<void> {
     const indexName = 'pm-handbook';
     console.log(`[RAGService] Deleting ${chunkIds.length} chunks from index: ${indexName}`);

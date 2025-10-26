@@ -28,9 +28,6 @@ class ChatApp {
 		this.init();
 	}
 
-	/**
-	 * Initialize event listeners and welcome message
-	 */
 	private init(): void {
 		this.chatForm.addEventListener('submit', (e) => this.handleSubmit(e));
 		this.messageInput.addEventListener('keydown', (e) => this.handleKeydown(e));
@@ -38,7 +35,6 @@ class ChatApp {
 
 		this.sidebarToggle.addEventListener('click', () => this.toggleSidebar());
 
-		// Setup suggestion cards
 		document.querySelectorAll('.suggestion-card').forEach((card) => {
 			card.addEventListener('click', () => {
 				const prompt = card.getAttribute('data-prompt');
@@ -49,13 +45,9 @@ class ChatApp {
 			});
 		});
 
-		// Set initial state as empty
 		this.updateContainerState();
 	}
 
-	/**
-	 * Update container state based on message count
-	 */
 	private updateContainerState(): void {
 		const messageCount = this.messagesContainer.querySelectorAll('.message').length;
 		if (messageCount === 0) {
@@ -67,32 +59,21 @@ class ChatApp {
 		}
 	}
 
-	/**
-	 * Hide suggestion cards
-	 */
 	private hideSuggestions(): void {
 		if (this.promptSuggestions) {
 			this.promptSuggestions.classList.add('hidden');
 		}
 	}
 
-	/**
-	 * Toggle sidebar visibility
-	 */
 	private toggleSidebar(): void {
 		if (window.innerWidth > 768) {
-			// Desktop: collapse/expand sidebar
 			this.sidebar.classList.toggle('collapsed');
 			this.mainContent.classList.toggle('sidebar-collapsed');
 		} else {
-			// Mobile: slide in/out sidebar
 			this.sidebar.classList.toggle('active');
 		}
 	}
 
-	/**
-	 * Handle keyboard events in textarea
-	 */
 	private handleKeydown(e: KeyboardEvent): void {
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
@@ -100,24 +81,17 @@ class ChatApp {
 		}
 	}
 
-	/**
-	 * Auto-resize textarea based on content
-	 */
 	private autoResize(): void {
 		this.messageInput.style.height = 'auto';
 		this.messageInput.style.height =
 			Math.min(this.messageInput.scrollHeight, 100) + 'px';
 	}
 
-	/**
-	 * Handle form submission
-	 */
 	private async handleSubmit(e: Event): Promise<void> {
 		e.preventDefault();
 		const message = this.messageInput.value.trim();
 		if (!message || this.isStreaming) return;
 
-		// Hide suggestion cards after first message
 		this.hideSuggestions();
 
 		this.addMessage(message, 'user');
@@ -145,9 +119,6 @@ class ChatApp {
 		}
 	}
 
-	/**
-	 * Send message to API and handle streaming response
-	 */
 	private async sendMessage(message: string, typingId: string): Promise<void> {
 		try {
 			const requestBody: { message: string; threadId?: string } = { message };
@@ -193,8 +164,7 @@ class ChatApp {
 						}
 						try {
 							const parsed = JSON.parse(eventData);
-							
-							// Handle status updates
+
 							if (parsed.type === 'status') {
 								if (statusIndicatorId) {
 									this.updateStatusIndicator(statusIndicatorId, parsed.message, parsed.status, parsed.tool);
@@ -202,15 +172,12 @@ class ChatApp {
 									statusIndicatorId = this.addStatusIndicator(parsed.message, parsed.status, parsed.tool);
 								}
 							}
-							// Handle content chunks
 							else if (parsed.type === 'chunk' && parsed.content) {
-								// Remove status indicator when content starts coming
 								if (statusIndicatorId) {
 									this.removeStatusIndicator(statusIndicatorId);
 									statusIndicatorId = null;
 								}
-								
-								// Create message if not exists
+
 								if (!assistantMessageId) {
 									assistantMessageId = this.addMessage('', 'assistant');
 								}
@@ -218,9 +185,7 @@ class ChatApp {
 								fullResponse += parsed.content;
 								this.updateMessage(assistantMessageId, fullResponse);
 							}
-							// Handle completion
 							else if (parsed.type === 'complete') {
-								// Save threadId for conversation continuity
 								if (parsed.threadId) {
 									this.currentThreadId = parsed.threadId;
 									console.log('💾 Thread ID saved:', this.currentThreadId);
@@ -238,14 +203,12 @@ class ChatApp {
 								}
 							}
 						} catch (e) {
-							// Ignore malformed JSON
 							console.warn('Failed to parse SSE data:', eventData);
 						}
 					}
 				}
 			}
 			
-			// Clean up any remaining status indicator
 			if (statusIndicatorId) {
 				this.removeStatusIndicator(statusIndicatorId);
 			}
@@ -255,9 +218,6 @@ class ChatApp {
 		}
 	}
 
-	/**
-	 * Add a new message to the chat
-	 */
 	private addMessage(content: string, type: 'user' | 'assistant'): string {
 		const messageId = 'msg-' + Date.now() + Math.random();
 		const messageDiv = document.createElement('div');
@@ -276,7 +236,6 @@ class ChatApp {
 		if (content) {
 			contentDiv.innerHTML = marked.parse(content) as string;
 		} else {
-			// Add skeleton loader for empty assistant messages
 			if (type === 'assistant') {
 				contentDiv.classList.add('skeleton-loading');
 				contentDiv.innerHTML = `
@@ -303,18 +262,14 @@ class ChatApp {
 		return messageId;
 	}
 
-	/**
-	 * Update an existing message content
-	 */
 	private updateMessage(messageId: string, content: string): void {
 		const messageDiv = document.getElementById(messageId);
 		if (messageDiv) {
 			const contentDiv = messageDiv.querySelector('.message-content');
 			if (contentDiv) {
-				// Remove skeleton loader if present
 				if (contentDiv.classList.contains('skeleton-loading')) {
 					contentDiv.classList.remove('skeleton-loading');
-					contentDiv.innerHTML = ''; // Clear skeleton
+					contentDiv.innerHTML = '';
 				}
 				if (contentDiv.classList.contains('empty')) {
 					contentDiv.classList.remove('empty');
@@ -326,9 +281,6 @@ class ChatApp {
 		}
 	}
 
-	/**
-	 * Add copy buttons to code blocks
-	 */
 	private addCopyButtons(container: HTMLElement): void {
 		const pres = container.querySelectorAll('pre');
 		pres.forEach((pre) => {
@@ -350,9 +302,6 @@ class ChatApp {
 		});
 	}
 
-	/**
-	 * Add typing indicator
-	 */
 	private addTypingIndicator(): string {
 		const typingId = 'typing-indicator';
 		if (document.getElementById(typingId)) return typingId;
@@ -370,9 +319,6 @@ class ChatApp {
 		return typingId;
 	}
 
-	/**
-	 * Remove typing indicator
-	 */
 	private removeTypingIndicator(typingId: string): void {
 		const typingDiv = document.getElementById(typingId);
 		if (typingDiv) {
@@ -380,9 +326,6 @@ class ChatApp {
 		}
 	}
 
-	/**
-	 * Add status indicator
-	 */
 	private addStatusIndicator(message: string, status: string, tool?: string): string {
 		const statusId = 'status-' + Date.now();
 		const statusDiv = document.createElement('div');
@@ -424,15 +367,11 @@ class ChatApp {
 		return statusId;
 	}
 
-	/**
-	 * Update status indicator
-	 */
 	private updateStatusIndicator(statusId: string, message: string, status: string, tool?: string): void {
 		const statusDiv = document.getElementById(statusId);
 		if (statusDiv) {
 			const statusHeader = statusDiv.querySelector('.status-header');
 			if (statusHeader) {
-				// Clear and rebuild
 				statusHeader.innerHTML = '';
 				
 				const spinner = document.createElement('span');
@@ -454,9 +393,6 @@ class ChatApp {
 		}
 	}
 
-	/**
-	 * Remove status indicator
-	 */
 	private removeStatusIndicator(statusId: string): void {
 		const statusDiv = document.getElementById(statusId);
 		if (statusDiv) {
@@ -464,23 +400,16 @@ class ChatApp {
 		}
 	}
 
-	/**
-	 * Enable/disable input controls
-	 */
 	private setInputDisabled(disabled: boolean): void {
 		this.messageInput.disabled = disabled;
 		this.sendButton.disabled = disabled;
 	}
 
-	/**
-	 * Scroll chat to bottom
-	 */
 	private scrollToBottom(): void {
 		this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
 	}
 }
 
-// Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
 	new ChatApp();
 });
