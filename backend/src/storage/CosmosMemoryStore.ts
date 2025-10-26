@@ -74,9 +74,14 @@ export class CosmosMemoryStore implements IMemoryStore {
         }))
       };
 
+      this.threadCache.set(threadId, thread);
+
       return thread;
     } catch (error: any) {
       if (error.code === 404) {
+        if (this.threadCache.has(threadId)) {
+          return this.threadCache.get(threadId)!;
+        }
         return null;
       }
       console.error(`Error reading thread ${threadId}:`, error);
@@ -118,9 +123,7 @@ export class CosmosMemoryStore implements IMemoryStore {
     thread.messages.push(message);
     thread.updatedAt = new Date();
 
-    if (this.threadCache.has(threadId)) {
-      this.threadCache.set(threadId, thread);
-    }
+    this.threadCache.set(threadId, thread);
 
     await container.items.upsert(thread);
   }

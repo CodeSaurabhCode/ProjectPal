@@ -1,0 +1,28 @@
+{
+  "documents": {
+    "pm-handbook-initial": {
+      "documentId": "pm-handbook-initial",
+      "originalName": "PM_handbook.txt",
+      "chunkCount": 2,
+      "embeddingCount": 2,
+      "processedAt": "2025-10-25T21:45:39.311Z",
+      "chunkIds": [
+        "pm-handbook-initial-chunk-0",
+        "pm-handbook-initial-chunk-1"
+      ]
+    },
+    "1761471417136-PM_handbook.txt": {
+      "documentId": "1761471417136-PM_handbook.txt",
+      "originalName": "PM_handbook.txt",
+      "chunkCount": 1,
+      "embeddingCount": 1,
+      "processedAt": "2025-10-26T09:36:58.304Z",
+      "chunkIds": [
+        "1761471417136-PM_handbook.txt-chunk-0"
+      ]
+    }
+  },
+  "totalChunks": 9,
+  "totalDocuments": 2,
+  "lastUpdated": "2025-10-26T09:36:58.305Z"
+}
