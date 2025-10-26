@@ -79,9 +79,6 @@ export class CosmosMemoryStore implements IMemoryStore {
       return thread;
     } catch (error: any) {
       if (error.code === 404) {
-        if (this.threadCache.has(threadId)) {
-          return this.threadCache.get(threadId)!;
-        }
         return null;
       }
       console.error(`Error reading thread ${threadId}:`, error);
@@ -107,7 +104,6 @@ export class CosmosMemoryStore implements IMemoryStore {
     console.log(`✅ Created new thread in Cosmos DB: ${threadId}`);
     
     this.threadCache.set(threadId, thread);
-    setTimeout(() => this.threadCache.delete(threadId), 30000);
     
     return thread;
   }
@@ -123,7 +119,9 @@ export class CosmosMemoryStore implements IMemoryStore {
     thread.messages.push(message);
     thread.updatedAt = new Date();
 
-    this.threadCache.set(threadId, thread);
+    if (this.threadCache.has(threadId)) {
+      this.threadCache.set(threadId, thread);
+    }
 
     await container.items.upsert(thread);
   }
