@@ -44,7 +44,7 @@ export class RAGService {
     }
   ): Promise<ProcessingStats> {
     const startTime = Date.now();
-    const { maxSize = 600, overlap = 100 } = options || {};
+    const { maxSize = 4000, overlap = 500 } = options || {};
     
     // Always use 'pm-handbook' as the index name
     const indexName = 'pm-handbook';

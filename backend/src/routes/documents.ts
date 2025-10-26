@@ -59,8 +59,8 @@ router.post('/upload', upload.single('document'), async (req: Request, res: Resp
     // All documents go into the 'pm-handbook' index
     console.log('[DocumentAPI] Processing document with Mastra RAG...');
     const stats = await RAGService.processDocument(textContent, documentMetadata.id, {
-      maxSize: 600,
-      overlap: 100,
+      maxSize: 4000,
+      overlap: 500,
     });
 
     // 4. Track document and its chunks

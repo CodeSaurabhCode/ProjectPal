@@ -41,8 +41,8 @@ async function initializeEmbeddings() {
     // Process (chunk → embed → store)
     console.log('🔧 Processing...');
     const stats = await RAGService.processDocument(content, HANDBOOK_DOC_ID, {
-      maxSize: 600,
-      overlap: 100,
+      maxSize: 4000,
+      overlap: 500,
     });
     console.log(`✅ Complete: ${stats.totalChunks} chunks, ${stats.totalEmbeddings} embeddings (${stats.processingTime}ms)\n`);
     
