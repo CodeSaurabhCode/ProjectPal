@@ -25,6 +25,7 @@ export class EnvironmentConfig {
     if (fs.existsSync(envPath)) {
       dotenv.config({ path: envPath, override: true });
       this.loaded = true;
+      console.log('[Environment] Loaded .env file (overriding system vars)');
     } else {
       console.error('❌ .env file not found at:', envPath);
     }
@@ -82,6 +83,24 @@ export class EnvironmentConfig {
     return process.env.MEMORY_DIR || path.join(process.cwd(), 'memory');
   }
 
+  get storageType(): 'local' | 'cosmos' {
+    const type = process.env.VECTOR_STORAGE_TYPE?.toLowerCase();
+    return type === 'cosmos' ? 'cosmos' : 'local';
+  }
+
+  get storageMode(): 'local' | 'blob' {
+    const mode = process.env.STORAGE_MODE?.toLowerCase();
+    return mode === 'blob' ? 'blob' : 'local';
+  }
+
+  get blobStorageConnectionString(): string | undefined {
+    return process.env.BLOB_STORAGE_CONNECTION_STRING || process.env.AZURE_STORAGE_CONNECTION_STRING;
+  }
+
+  get blobStorageContainerName(): string {
+    return process.env.BLOB_STORAGE_CONTAINER || 'documents';
+  }
+
   // Cosmos DB Configuration
   get cosmosDbEndpoint(): string | undefined {
     return process.env.COSMOS_DB_ENDPOINT;
@@ -97,6 +116,28 @@ export class EnvironmentConfig {
 
   get cosmosDbContainer(): string {
     return process.env.COSMOS_DB_CONTAINER || 'Conversations';
+  }
+
+  get cosmosConnectionString(): string | undefined {
+    // Support both connection string and endpoint+key
+    const connStr = process.env.COSMOS_CONNECTION_STRING;
+    if (connStr) return connStr;
+
+    const endpoint = this.cosmosDbEndpoint;
+    const key = this.cosmosDbKey;
+    if (endpoint && key) {
+      return `AccountEndpoint=${endpoint};AccountKey=${key};`;
+    }
+
+    return undefined;
+  }
+
+  get cosmosDatabaseName(): string {
+    return process.env.COSMOS_VECTOR_DATABASE || 'ProjectPal';
+  }
+
+  get cosmosContainerName(): string {
+    return process.env.COSMOS_VECTOR_CONTAINER || 'embeddings';
   }
 
   isProduction(): boolean {

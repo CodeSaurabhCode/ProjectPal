@@ -1,0 +1,94 @@
+---
+/**
+ * PM Handbook Container
+ * Main container for document management functionality
+ */
+import DocumentUpload from './DocumentUpload.astro';
+import DocumentList from './DocumentList.astro';
+---
+
+<div class="handbook-container">
+  <div class="handbook-header">
+    <h1 class="handbook-title">
+      <i class="fas fa-book"></i>
+      PM Handbook
+    </h1>
+    <p class="handbook-description">
+      Manage your project management knowledge base. Upload documents to enhance the AI assistant's understanding of your PM practices.
+    </p>
+  </div>
+
+  <div class="handbook-content">
+    <DocumentUpload />
+    <DocumentList />
+  </div>
+</div>
+
+<style>
+  .handbook-container {
+    padding: 32px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .handbook-header {
+    margin-bottom: 32px;
+  }
+
+  .handbook-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-color, #ffffff);
+    margin: 0 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .handbook-title i {
+    color: var(--primary-color, #00796b);
+    font-size: 36px;
+  }
+
+  .handbook-description {
+    font-size: 16px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+    margin: 0;
+    max-width: 800px;
+    line-height: 1.6;
+  }
+
+  .handbook-content {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .handbook-container {
+      padding: 20px 16px;
+    }
+
+    .handbook-title {
+      font-size: 24px;
+      gap: 12px;
+    }
+
+    .handbook-title i {
+      font-size: 28px;
+    }
+
+    .handbook-description {
+      font-size: 14px;
+    }
+  }
+</style>

@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar.astro';
 import ChatHeader from '../components/Chat/ChatHeader.astro';
 import ChatMessages from '../components/Chat/ChatMessages.astro';
 import ChatInputArea from '../components/Chat/ChatInputArea.astro';
+import HandbookContainer from '../components/Handbook/HandbookContainer.astro';
 
 const title = 'ProjectPal - AI Project Manager Assistant';
 ---
@@ -13,20 +14,48 @@ const title = 'ProjectPal - AI Project Manager Assistant';
 		<Sidebar />
 		
 		<main class="main-content">
-			<div class="chat-container" id="chatContainer">
-				<ChatHeader />
-				<div class="welcome-section">
-					<h1 class="welcome-title">Hello! I'm ProjectPal</h1>
-					<p class="welcome-subtitle">Your AI project management assistant. How can I help you today?</p>
+			<!-- Chat Tab -->
+			<div class="tab-content active" id="chatTab">
+				<div class="chat-container" id="chatContainer">
+					<ChatHeader />
+					<div class="welcome-section">
+						<h1 class="welcome-title">Hello! I'm ProjectPal</h1>
+						<p class="welcome-subtitle">Your AI project management assistant. How can I help you today?</p>
+					</div>
+					<ChatMessages />
+					<ChatInputArea />
 				</div>
-				<ChatMessages />
-				<ChatInputArea />
+			</div>
+
+			<!-- PM Handbook Tab -->
+			<div class="tab-content" id="handbookTab">
+				<HandbookContainer />
+			</div>
+
+			<!-- Projects Tab (Placeholder) -->
+			<div class="tab-content" id="projectsTab">
+				<div class="coming-soon">
+					<i class="fas fa-tasks"></i>
+					<h2>Projects</h2>
+					<p>Coming soon...</p>
+				</div>
+			</div>
+
+			<!-- Team Tab (Placeholder) -->
+			<div class="tab-content" id="teamTab">
+				<div class="coming-soon">
+					<i class="fas fa-users"></i>
+					<h2>Team Directory</h2>
+					<p>Coming soon...</p>
+				</div>
 			</div>
 		</main>
 	</div>
 </Layout>
 
 <script src="../scripts/chat.ts"></script>
+<script src="../scripts/documents.ts"></script>
+<script src="../scripts/navigation.ts"></script>
 
 <style>
 	.app-container {
@@ -48,10 +77,24 @@ const title = 'ProjectPal - AI Project Manager Assistant';
 		margin-left: 70px;
 	}
 
+	/* Tab content */
+	.tab-content {
+		display: none;
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+	}
+
+	.tab-content.active {
+		display: flex;
+		flex-direction: column;
+	}
+
+	/* Chat container styles */
 	.chat-container {
 		display: flex;
 		flex-direction: column;
-		height: 100vh;
+		height: 100%;
 		width: 100%;
 		margin: 0 auto;
 		background-color: var(--background-color);
@@ -133,6 +176,36 @@ const title = 'ProjectPal - AI Project Manager Assistant';
 		bottom: 0;
 		background-color: var(--background-color);
 		border-top: 1px solid var(--border-color);
+	}
+
+	/* Coming soon placeholder */
+	.coming-soon {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		height: 100%;
+		text-align: center;
+		padding: 48px;
+	}
+
+	.coming-soon i {
+		font-size: 64px;
+		color: var(--primary-color);
+		margin-bottom: 24px;
+	}
+
+	.coming-soon h2 {
+		font-size: 28px;
+		font-weight: 600;
+		color: var(--text-color);
+		margin: 0 0 12px 0;
+	}
+
+	.coming-soon p {
+		font-size: 16px;
+		color: var(--text-secondary);
+		margin: 0;
 	}
 
 	@media (max-width: 768px) {

@@ -11,25 +11,25 @@
 	<div class="sidebar-nav">
 		<ul class="nav-list">
 			<li>
-				<a href="#" class="nav-link" title="Chat Assistant">
+				<a href="#" class="nav-link active" data-tab="chat" title="Chat Assistant">
 					<i class="fas fa-comments"></i>
 					<span class="nav-text">Chat Assistant</span>
 				</a>
 			</li>
 			<li>
-				<a href="#" class="nav-link" title="Projects">
+				<a href="#" class="nav-link" data-tab="projects" title="Projects">
 					<i class="fas fa-tasks"></i>
 					<span class="nav-text">Projects</span>
 				</a>
 			</li>
 			<li>
-				<a href="#" class="nav-link" title="Team Directory">
+				<a href="#" class="nav-link" data-tab="team" title="Team Directory">
 					<i class="fas fa-users"></i>
 					<span class="nav-text">Team Directory</span>
 				</a>
 			</li>
 			<li>
-				<a href="#" class="nav-link" title="PM Handbook">
+				<a href="#" class="nav-link" data-tab="handbook" title="PM Handbook">
 					<i class="fas fa-book"></i>
 					<span class="nav-text">PM Handbook</span>
 				</a>
@@ -192,6 +192,15 @@
 
 	.nav-link:hover {
 		background-color: var(--button-hover-bg);
+	}
+
+	.nav-link.active {
+		background-color: var(--primary-color);
+		color: white;
+	}
+
+	.nav-link.active:hover {
+		background-color: var(--primary-color);
 	}
 
 	.sidebar-footer {

@@ -34,3 +34,8 @@ output "container_name" {
   description = "Name of the container"
   value       = azurerm_cosmosdb_sql_container.main.name
 }
+
+output "embeddings_container_name" {
+  description = "Name of the embeddings/vector container"
+  value       = azurerm_cosmosdb_sql_container.embeddings.name
+}

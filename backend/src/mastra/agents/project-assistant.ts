@@ -1,7 +1,7 @@
 import { Agent } from '@mastra/core/agent';
 import { createOpenAI } from '@ai-sdk/openai';
 import { getTeamDirectory, createProjectTicket } from '../tools/directory';
-import { queryHandbook } from '../tools/rag-tool';
+import { queryHandbookEnhanced } from '../tools/rag-tool-enhanced';
 import { envConfig } from '../../config/environment';
 
 const openaiClient = createOpenAI({
@@ -25,7 +25,7 @@ export const projectAssistant = new Agent({
   Always provide clear, actionable responses with specific details.`,
   model: openaiClient('gpt-4o-mini'),
   tools: {
-    queryHandbook,
+    queryHandbook: queryHandbookEnhanced,
     getTeamDirectory,
     createProjectTicket
   }
