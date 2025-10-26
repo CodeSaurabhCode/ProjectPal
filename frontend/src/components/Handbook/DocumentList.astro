@@ -1,0 +1,223 @@
+---
+/**
+ * Document List Component
+ * Displays all uploaded documents in a grid
+ */
+import DocumentCard from './DocumentCard.astro';
+---
+
+<div class="documents-section">
+  <div class="documents-header">
+    <h2 class="documents-title">
+      <i class="fas fa-folder-open"></i>
+      Your Documents
+    </h2>
+    <div class="documents-count" id="documentsCount">
+      <span class="count-number">0</span>
+      <span class="count-label">documents</span>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="documents-loading" id="documentsLoading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+    </div>
+    <p class="loading-text">Loading documents...</p>
+  </div>
+
+  <!-- Empty state -->
+  <div class="documents-empty" id="documentsEmpty" style="display: none;">
+    <div class="empty-icon">
+      <i class="fas fa-inbox"></i>
+    </div>
+    <h3 class="empty-title">No documents yet</h3>
+    <p class="empty-description">
+      Upload your first document to get started with the PM Handbook
+    </p>
+  </div>
+
+  <!-- Error state -->
+  <div class="documents-error" id="documentsError" style="display: none;">
+    <div class="error-icon">
+      <i class="fas fa-exclamation-circle"></i>
+    </div>
+    <h3 class="error-title">Failed to load documents</h3>
+    <p class="error-description"></p>
+    <button class="retry-btn" id="retryBtn">
+      <i class="fas fa-redo"></i>
+      Retry
+    </button>
+  </div>
+
+  <!-- Documents grid -->
+  <div class="documents-grid" id="documentsGrid" style="display: none;">
+    <!-- Document cards will be inserted here dynamically -->
+  </div>
+</div>
+
+<style>
+  .documents-section {
+    margin-top: 32px;
+  }
+
+  .documents-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .documents-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-color, #ffffff);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .documents-title i {
+    color: var(--primary-color, #00796b);
+  }
+
+  .documents-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    padding: 6px 16px;
+    background-color: var(--card-bg, #1e1e1e);
+    border: 1px solid var(--border-color, #2d2d2d);
+    border-radius: 20px;
+  }
+
+  .count-number {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--primary-color, #00796b);
+  }
+
+  .count-label {
+    font-size: 13px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  }
+
+  /* Loading state */
+  .documents-loading {
+    text-align: center;
+    padding: 64px 32px;
+  }
+
+  .loading-spinner {
+    font-size: 48px;
+    color: var(--primary-color, #00796b);
+    margin-bottom: 16px;
+  }
+
+  .loading-text {
+    font-size: 16px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+    margin: 0;
+  }
+
+  /* Empty state */
+  .documents-empty {
+    text-align: center;
+    padding: 64px 32px;
+  }
+
+  .empty-icon {
+    font-size: 64px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.3));
+    margin-bottom: 20px;
+  }
+
+  .empty-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-color, #ffffff);
+    margin: 0 0 8px 0;
+  }
+
+  .empty-description {
+    font-size: 14px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+    margin: 0;
+  }
+
+  /* Error state */
+  .documents-error {
+    text-align: center;
+    padding: 64px 32px;
+  }
+
+  .error-icon {
+    font-size: 64px;
+    color: var(--error-color, #ff4444);
+    margin-bottom: 20px;
+  }
+
+  .error-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-color, #ffffff);
+    margin: 0 0 8px 0;
+  }
+
+  .error-description {
+    font-size: 14px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+    margin: 0 0 20px 0;
+  }
+
+  .retry-btn {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #00796b 0%, #004d40 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .retry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 121, 107, 0.4);
+  }
+
+  /* Documents grid */
+  .documents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .documents-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .documents-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .documents-loading,
+    .documents-empty,
+    .documents-error {
+      padding: 48px 24px;
+    }
+
+    .empty-icon,
+    .error-icon {
+      font-size: 48px;
+    }
+  }
+</style>

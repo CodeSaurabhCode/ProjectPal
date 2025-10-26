@@ -1,0 +1,207 @@
+---
+/**
+ * Document Card Component
+ * Displays a single document with actions (download, delete)
+ */
+import type { Document } from '../../types/document';
+
+interface Props {
+  document: Document;
+}
+
+const { document } = Astro.props;
+
+// Get file extension
+const fileExtension = document.originalName.split('.').pop()?.toUpperCase() || 'FILE';
+
+// Get file icon based on mime type
+function getFileIcon(mimeType: string): string {
+  if (mimeType.includes('pdf')) return 'fa-file-pdf';
+  if (mimeType.includes('word') || mimeType.includes('document')) return 'fa-file-word';
+  if (mimeType.includes('text')) return 'fa-file-alt';
+  if (mimeType.includes('markdown')) return 'fa-file-code';
+  return 'fa-file';
+}
+
+const fileIcon = getFileIcon(document.mimeType);
+---
+
+<div class="document-card" data-document-id={document.id}>
+  <div class="document-icon">
+    <i class={`fas ${fileIcon}`}></i>
+    <span class="file-type">{fileExtension}</span>
+  </div>
+  
+  <div class="document-info">
+    <h3 class="document-name" title={document.originalName}>
+      {document.originalName}
+    </h3>
+    <div class="document-meta">
+      <span class="document-size" data-size={document.size}></span>
+      <span class="document-separator">•</span>
+      <span class="document-date" data-date={document.uploadedAt}></span>
+    </div>
+  </div>
+  
+  <div class="document-actions">
+    <button 
+      class="action-btn download-btn" 
+      data-filename={document.filename}
+      data-original-name={document.originalName}
+      title="Download document"
+      aria-label="Download document"
+    >
+      <i class="fas fa-download"></i>
+    </button>
+    <button 
+      class="action-btn delete-btn" 
+      data-filename={document.filename}
+      title="Delete document"
+      aria-label="Delete document"
+    >
+      <i class="fas fa-trash"></i>
+    </button>
+  </div>
+</div>
+
+<style>
+  .document-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background-color: var(--card-bg, #1e1e1e);
+    border: 1px solid var(--border-color, #2d2d2d);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .document-card:hover {
+    background-color: var(--card-hover-bg, #252525);
+    border-color: var(--primary-color, #00796b);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 121, 107, 0.2);
+  }
+
+  .document-icon {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #00796b 0%, #004d40 100%);
+    border-radius: 12px;
+    flex-shrink: 0;
+  }
+
+  .document-icon i {
+    font-size: 24px;
+    color: white;
+  }
+
+  .file-type {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    background-color: var(--accent-color, #ff6b6b);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 4px;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+
+  .document-info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .document-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-color, #ffffff);
+    margin: 0 0 6px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .document-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  }
+
+  .document-separator {
+    color: var(--text-secondary, rgba(255, 255, 255, 0.3));
+  }
+
+  .document-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .action-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: transparent;
+    border: 1px solid var(--border-color, #2d2d2d);
+    border-radius: 8px;
+    color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .action-btn:hover {
+    background-color: var(--button-hover-bg, #2d2d2d);
+    border-color: var(--primary-color, #00796b);
+    color: var(--primary-color, #00796b);
+  }
+
+  .delete-btn:hover {
+    border-color: var(--error-color, #ff4444);
+    color: var(--error-color, #ff4444);
+  }
+
+  .action-btn i {
+    font-size: 14px;
+  }
+
+  @media (max-width: 768px) {
+    .document-card {
+      padding: 12px;
+      gap: 12px;
+    }
+
+    .document-icon {
+      width: 40px;
+      height: 40px;
+    }
+
+    .document-icon i {
+      font-size: 20px;
+    }
+
+    .document-name {
+      font-size: 14px;
+    }
+
+    .document-meta {
+      font-size: 12px;
+    }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+    }
+  }
+</style>
