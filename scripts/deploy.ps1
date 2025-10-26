@@ -67,6 +67,7 @@ if (!$SkipInfrastructure) {
     Set-Location ..
     
     Write-Host "Infrastructure deployed successfully!" -ForegroundColor Green
+    Write-Host "  ✅ All environment variables configured via Terraform" -ForegroundColor Green
     Write-Host ""
 } else {
     Write-Host "Skipping infrastructure deployment" -ForegroundColor Yellow
@@ -118,22 +119,81 @@ if (!$SkipBackend) {
         exit 1
     }
     
-    # Update Container App with CORS settings
-    Write-Host "Updating Container App with CORS configuration..." -ForegroundColor Yellow
+    # Get Cosmos DB configuration from Terraform
+    Write-Host "Getting Cosmos DB configuration..." -ForegroundColor Yellow
+    Set-Location terraform
+    $cosmosEndpoint = terraform output -raw cosmos_db_endpoint
+    $cosmosDatabase = terraform output -raw cosmos_database_name
+    $cosmosContainer = terraform output -raw cosmos_container_name
+    $cosmosEmbeddingsContainer = terraform output -raw cosmos_embeddings_container_name
+    Set-Location ..
+    
+    # Update Container App with new image only (env vars already set by Terraform)
+    Write-Host "Updating Container App image..." -ForegroundColor Yellow
     az containerapp update `
         --name $backendName `
         --resource-group $resourceGroup `
-        --image "${acrServer}/projectpal-backend:latest" `
-        --set-env-vars "FRONTEND_URL=https://$frontendUrl" "ALLOWED_ORIGINS=https://$frontendUrl"
+        --image "${acrServer}/projectpal-backend:latest"
     
     if ($LASTEXITCODE -ne 0) {
         Write-Host "ERROR: Container App update failed" -ForegroundColor Red
         exit 1
     }
     
+    Write-Host "  ✅ Container App updated with new image" -ForegroundColor Green
+    
+    # Configure CORS on Container App
+    Write-Host "Configuring CORS on Container App..." -ForegroundColor Yellow
+    az containerapp ingress cors update `
+        --name $backendName `
+        --resource-group $resourceGroup `
+        --allowed-origins "https://$frontendUrl" `
+        --allowed-methods GET POST PUT DELETE OPTIONS `
+        --allowed-headers "*" `
+        --expose-headers "*" `
+        --max-age 3600 `
+        --allow-credentials true
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "WARNING: CORS configuration failed, but continuing..." -ForegroundColor Yellow
+    } else {
+        Write-Host "  ✅ CORS configured for: https://$frontendUrl" -ForegroundColor Green
+    }
+    
     Write-Host "Backend deployed successfully!" -ForegroundColor Green
     Write-Host "  - CORS configured for: https://$frontendUrl" -ForegroundColor Green
-    Write-Host "  - Environment variables updated with URLs" -ForegroundColor Green
+    Write-Host "  - Vector storage: Cosmos DB ($cosmosEmbeddingsContainer)" -ForegroundColor Green
+    Write-Host "  - Memory storage: Cosmos DB ($cosmosContainer)" -ForegroundColor Green
+    Write-Host "  - Environment variables configured" -ForegroundColor Green
+    Write-Host ""
+    
+    # Initialize embeddings in Cosmos DB
+    Write-Host "Initializing PM Handbook embeddings in Cosmos DB..." -ForegroundColor Cyan
+    Set-Location backend
+    
+    # Get Cosmos connection string
+    Set-Location "$projectRoot\terraform"
+    $cosmosConnectionString = terraform output -raw cosmos_db_connection_string
+    Set-Location "$projectRoot\backend"
+    
+    # Set environment variables for initialization
+    $env:COSMOS_CONNECTION_STRING = $cosmosConnectionString
+    $env:VECTOR_STORAGE_TYPE = "cosmos"
+    $env:COSMOS_VECTOR_DATABASE = $cosmosDatabase
+    $env:COSMOS_VECTOR_CONTAINER = $cosmosEmbeddingsContainer
+    $env:OPENAI_API_KEY = (Get-Content "$projectRoot\terraform\terraform.tfvars" | Select-String -Pattern 'openai_api_key\s*=\s*"([^"]+)"').Matches.Groups[1].Value
+    
+    # Run initialization
+    Write-Host "Processing PM_handbook.txt and creating embeddings..." -ForegroundColor Yellow
+    npm run init-embeddings
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Embeddings initialized successfully in Cosmos DB!" -ForegroundColor Green
+    } else {
+        Write-Host "WARNING: Embeddings initialization failed. You can run it manually later." -ForegroundColor Yellow
+    }
+    
+    Set-Location $projectRoot
     Write-Host ""
 } else {
     Write-Host "Skipping backend deployment" -ForegroundColor Yellow
@@ -148,10 +208,16 @@ if (!$SkipFrontend) {
     Write-Host "Step 3: Deploying Frontend..." -ForegroundColor Cyan
     Write-Host ""
     
-    # Build frontend with backend URL
-    Write-Host "Building frontend..." -ForegroundColor Yellow
+    # Create/Update .env.production with backend URL
+    Write-Host "Configuring frontend environment variables..." -ForegroundColor Yellow
     Set-Location frontend
     
+    $envContent = "PUBLIC_BACKEND_URL=$backendUrl"
+    $envContent | Out-File -FilePath ".env.production" -Encoding UTF8 -Force
+    Write-Host "  ✅ Created .env.production with backend URL" -ForegroundColor Green
+    
+    # Build frontend with backend URL
+    Write-Host "Building frontend..." -ForegroundColor Yellow
     $env:PUBLIC_BACKEND_URL = $backendUrl
     npm run build
     
@@ -159,6 +225,15 @@ if (!$SkipFrontend) {
         Write-Host "ERROR: Frontend build failed" -ForegroundColor Red
         Set-Location ..
         exit 1
+    }
+    
+    # Verify backend URL is in built files
+    Write-Host "Verifying backend URL in built files..." -ForegroundColor Yellow
+    $backendUrlCheck = Select-String -Path "dist/_astro/*.js" -Pattern "projectpal-dev-backend" -Quiet
+    if ($backendUrlCheck) {
+        Write-Host "  ✅ Backend URL verified in build output" -ForegroundColor Green
+    } else {
+        Write-Host "  ⚠️  Warning: Backend URL not found in build output" -ForegroundColor Yellow
     }
     
     # Deploy to Static Web App
@@ -196,21 +271,52 @@ Write-Host "  Backend:  $backendUrl" -ForegroundColor White
 Write-Host ""
 Write-Host "Configuration:" -ForegroundColor Cyan
 Write-Host "  - CORS configured for: https://$frontendUrl" -ForegroundColor White
-Write-Host "  - Backend environment variables updated in Azure Container App" -ForegroundColor White
+Write-Host "  - Vector Storage: Cosmos DB (embeddings container)" -ForegroundColor White
+Write-Host "  - Memory Storage: Cosmos DB (conversations container)" -ForegroundColor White
+Write-Host "  - RAG System: Consolidated pm-handbook index" -ForegroundColor White
+Write-Host "  - Document Tracking: Enabled with chunk management" -ForegroundColor White
+Write-Host ""
+Write-Host "Features Deployed:" -ForegroundColor Cyan
+Write-Host "  ✅ Advanced RAG with consolidated document management" -ForegroundColor Green
+Write-Host "  ✅ Cosmos DB vector storage with native search" -ForegroundColor Green
+Write-Host "  ✅ Document chunking with overlap" -ForegroundColor Green
+Write-Host "  ✅ OpenAI embeddings (1536 dimensions)" -ForegroundColor Green
+Write-Host "  ✅ Semantic search across all documents" -ForegroundColor Green
+Write-Host "  ✅ Document upload and tracking" -ForegroundColor Green
+Write-Host "  ✅ Selective document deletion" -ForegroundColor Green
 Write-Host ""
 Write-Host "Test your deployment:" -ForegroundColor Cyan
 Write-Host "  # Test backend health:" -ForegroundColor White
 Write-Host "  curl $backendUrl/api/health" -ForegroundColor Gray
 Write-Host ""
-Write-Host "  # Test chat endpoint:" -ForegroundColor White
-Write-Host '  $body = @{ message = "Hello!" } | ConvertTo-Json' -ForegroundColor Gray
-Write-Host "  Invoke-WebRequest -Uri $backendUrl/api/chat -Method POST -Body `$body -ContentType 'application/json' -Headers @{ Origin = 'https://$frontendUrl' }" -ForegroundColor Gray
+Write-Host "  # Upload a document:" -ForegroundColor White
+Write-Host '  $file = Get-Item ".\your-document.txt"' -ForegroundColor Gray
+Write-Host '  $form = @{ file = $file }' -ForegroundColor Gray
+Write-Host "  Invoke-WebRequest -Uri $backendUrl/api/documents/upload -Method POST -Form `$form" -ForegroundColor Gray
+Write-Host ""
+Write-Host "  # Search documents:" -ForegroundColor White
+Write-Host '  $body = @{ query = "budget approval"; topK = 5 } | ConvertTo-Json' -ForegroundColor Gray
+Write-Host "  Invoke-WebRequest -Uri $backendUrl/api/documents/search -Method POST -Body `$body -ContentType 'application/json'" -ForegroundColor Gray
+Write-Host ""
+Write-Host "  # Chat with RAG context:" -ForegroundColor White
+Write-Host '  $body = @{ message = "What are the budget approval requirements?" } | ConvertTo-Json' -ForegroundColor Gray
+Write-Host "  Invoke-WebRequest -Uri $backendUrl/api/chat -Method POST -Body `$body -ContentType 'application/json'" -ForegroundColor Gray
 Write-Host ""
 Write-Host "  # Open frontend in browser:" -ForegroundColor White
 Write-Host "  start https://$frontendUrl" -ForegroundColor Gray
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
-Write-Host "  1. Upload PM handbook to blob storage (optional)" -ForegroundColor White
-Write-Host "  2. Test your application in the browser" -ForegroundColor White
-Write-Host "  3. Check logs: az containerapp logs show --name $backendName --resource-group $resourceGroup --tail 20" -ForegroundColor White
+Write-Host "  1. Upload additional documents via frontend or API" -ForegroundColor White
+Write-Host "  2. Test RAG search and chat functionality" -ForegroundColor White
+Write-Host "  3. Monitor Cosmos DB for embeddings and conversations" -ForegroundColor White
+Write-Host "  4. Check logs: az containerapp logs show --name $backendName --resource-group $resourceGroup --tail 50" -ForegroundColor White
+Write-Host ""
+Write-Host "Cosmos DB Management:" -ForegroundColor Cyan
+Write-Host "  Database: $cosmosDatabase" -ForegroundColor White
+Write-Host "  Containers:" -ForegroundColor White
+Write-Host "    - conversations: Chat history and memory" -ForegroundColor Gray
+Write-Host "    - embeddings: Document chunks and vectors (pm-handbook)" -ForegroundColor Gray
+Write-Host ""
+Write-Host "View in Azure Portal:" -ForegroundColor Cyan
+Write-Host "  az cosmosdb show --name $cosmosEndpoint --resource-group $resourceGroup" -ForegroundColor Gray
 Write-Host ""

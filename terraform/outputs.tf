@@ -94,6 +94,17 @@ output "cosmos_container_name" {
   value       = module.cosmos_db.container_name
 }
 
+output "cosmos_embeddings_container_name" {
+  description = "Name of the Cosmos DB embeddings/vector container"
+  value       = module.cosmos_db.embeddings_container_name
+}
+
+output "cosmos_db_connection_string" {
+  description = "Connection string for Cosmos DB (for vector storage)"
+  value       = module.cosmos_db.connection_strings[0]
+  sensitive   = true
+}
+
 # ============================================================================
 # BLOB STORAGE
 # ============================================================================
@@ -111,6 +122,12 @@ output "storage_container_name" {
 output "storage_primary_blob_endpoint" {
   description = "Primary blob endpoint"
   value       = module.storage.primary_blob_endpoint
+}
+
+output "storage_connection_string" {
+  description = "Storage account connection string for blob storage"
+  value       = module.storage.primary_connection_string
+  sensitive   = true
 }
 
 # ============================================================================

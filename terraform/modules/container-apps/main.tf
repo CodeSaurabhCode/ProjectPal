@@ -79,6 +79,11 @@ resource "azurerm_container_app" "backend" {
       }
 
       env {
+        name  = "VECTOR_STORAGE_TYPE"
+        value = "cosmos"
+      }
+
+      env {
         name  = "COSMOS_DB_ENDPOINT"
         value = var.cosmos_endpoint
       }
@@ -96,6 +101,16 @@ resource "azurerm_container_app" "backend" {
       env {
         name  = "COSMOS_DB_CONTAINER"
         value = var.cosmos_container_name
+      }
+
+      env {
+        name  = "COSMOS_VECTOR_DATABASE"
+        value = var.cosmos_database_name
+      }
+
+      env {
+        name  = "COSMOS_VECTOR_CONTAINER"
+        value = "embeddings"
       }
 
       env {
