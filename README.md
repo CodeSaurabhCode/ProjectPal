@@ -296,45 +296,9 @@ terraform apply
 GitHub Actions automatically deploys on push to `main`. See [DEPLOYMENT.md](DEPLOYMENT.md) for setup.
 
 ---
----
-
-## 📖 Documentation
-
-**Technical Guides:**
-- [STREAMING_IMPLEMENTATION.md](docs/STREAMING_IMPLEMENTATION.md) - SSE streaming with Mastra
-- [EMBEDDINGS_ARCHITECTURE.md](docs/EMBEDDINGS_ARCHITECTURE.md) - Cosmos DB vector search
-- [ARCHITECTURE_DIAGRAMS.md](docs/ARCHITECTURE_DIAGRAMS.md) - Visual architecture (12 diagrams)
-
-**Submission Documents:**
-- [01_Executive_Summary.md](docs/submission/01_Executive_Summary.md)
-- [02_Conceptual_Design.md](docs/submission/02_Conceptual_Design.md)
-- [03_Azure_Architecture.md](docs/submission/03_Azure_Architecture.md)
-- [04_Service_Rationale.md](docs/submission/04_Service_Rationale.md)
-
-**Setup:**
-- [DEPLOYMENT.md](DEPLOYMENT.md) - Azure deployment guide
-- [backend/MEMORY_SETUP.md](backend/MEMORY_SETUP.md) - Memory configuration
-- [.github/CICD_SETUP.md](.github/CICD_SETUP.md) - CI/CD setup
-
----
-
-## 🤝 Contributing
-
-1. Fork repository
-2. Create feature branch
-3. Commit changes
-4. Push and open PR
-
----
-
-## 📄 License
-
-MIT License
-
----
 
 **Built with ❤️ using Astro, Mastra, and Azure**AI key, deployment tokens)
-3. Push to `main` → automatic deployment! 🚀
+1. Push to `main` → automatic deployment! 🚀
 
 
 
