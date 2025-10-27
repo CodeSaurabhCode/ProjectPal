@@ -19,8 +19,8 @@ AI-powered project management assistant with real-time streaming, RAG capabiliti
 ## 🌐 Production URLs
 
 **Live Application:**
-- Frontend: `https://projectpal-dev.azurestaticapps.net`
-- Backend API: `https://projectpal-dev-backend.azurecontainerapps.io`
+- Frontend: `https://kind-meadow-02e32640f.3.azurestaticapps.net/`
+- Backend API: `https://projectpal-dev-backend.mangobush-a77275d1.eastus.azurecontainerapps.io/`
 
 ---
 
@@ -208,7 +208,6 @@ sequenceDiagram
 - Protocol: Server-Sent Events (SSE)
 - TTFC: 300-800ms
 - Events: `connected`, `status`, `chunk`, `tool`, `complete`, `end`
-- See [STREAMING_IMPLEMENTATION.md](docs/STREAMING_IMPLEMENTATION.md)
 
 **RAG Pipeline (Document Intelligence):**
 - **Upload:** Drop .txt/.md files in PM Handbook tab
@@ -218,7 +217,6 @@ sequenceDiagram
 - **Query:** Vector search <20ms latency
 - **Best Use:** PM policies, procedures, handbooks, technical docs
 - **Cost:** $0-2/month (vs $40+ alternatives)
-- See [EMBEDDINGS_ARCHITECTURE.md](docs/EMBEDDINGS_ARCHITECTURE.md)
 
 ---
 
