@@ -109,7 +109,7 @@ IMPORTANT NOTES:
       });
       
       console.log(`[Smart Handbook Tool] Found ${searchResults.length} relevant chunks`);
-      
+
       if (searchResults.length === 0) {
         return {
           answer: `No information found in the PM Handbook for "${query}". 
@@ -161,7 +161,7 @@ function synthesizeAnswer(query: string, results: SearchResult[]): string {
     return 'No relevant information found.';
   }
   
-  const topResults = results.slice(0, 3); // Focus on top 3 most relevant
+  const topResults = results.slice(0, 5); 
   
   let answer = `**From PM Handbook** (in response to: "${query}"):\n\n`;
   
@@ -173,4 +173,3 @@ function synthesizeAnswer(query: string, results: SearchResult[]): string {
   
   return answer;
 }
-

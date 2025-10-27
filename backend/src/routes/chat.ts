@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
 import { projectAssistant } from '../mastra/agents/project-assistant';
-import { SSEService } from '../services/SSEService';
 import { getMemoryStore } from '../storage/MemoryStoreFactory';
 import type { Message } from '../types/memory.types';
 import { mapToolCallsForMemory, getToolDisplayName } from '../utils/toolCallMapper';
@@ -13,7 +12,6 @@ const ChatRequestSchema = z.object({
   threadId: z.string().optional()
 });
 
-const sseService = new SSEService();
 const memoryStore = getMemoryStore();
 
 router.post('/', async (req: Request, res: Response) => {
@@ -32,8 +30,14 @@ router.post('/', async (req: Request, res: Response) => {
 
     const { message, threadId: requestThreadId } = validationResult.data;
 
-    sseService.setupHeaders(res);
-    sseService.sendConnected(res);
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no'
+    });
+
+    res.write(`event: connected\ndata: ${JSON.stringify({ status: 'connected' })}\n\n`);
 
     try {
       let threadId = requestThreadId;
@@ -67,47 +71,88 @@ router.post('/', async (req: Request, res: Response) => {
         ? `Previous conversation:\n${conversationHistory}\n\nUser: ${message}`
         : message;
 
-      sseService.sendStatus(res, 'thinking', '🤔 Analyzing your request...');
-      
-      const result = await projectAssistant.generate(contextualMessage);
-      const responseText = result.text || 'No response generated';
+      res.write(`event: status\ndata: ${JSON.stringify({ 
+        status: 'thinking', 
+        message: '🤔 Analyzing your request...' 
+      })}\n\n`);
 
-      const rawToolCalls = (result.toolCalls as unknown[]) || [];
-      const memoryToolCalls = mapToolCallsForMemory(rawToolCalls);
+      const stream = await projectAssistant.stream([
+        { role: 'user', content: contextualMessage }
+      ]);
+
+      const toolCalls: any[] = [];
+      let fullText = '';
+
+      res.write(`event: status\ndata: ${JSON.stringify({ 
+        status: 'generating', 
+        message: '✍️ Generating response...' 
+      })}\n\n`);
+
+      for await (const chunk of stream.textStream) {
+        fullText += chunk;
+
+        res.write(`event: chunk\ndata: ${JSON.stringify({ 
+          chunk,
+          type: 'text' 
+        })}\n\n`);
+
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+      const finishReason = await stream.finishReason;
+      const usage = await stream.usage;
+      const rawToolCalls = await stream.toolCalls;
+
+      console.log(`[Chat] Stream finished:`, {
+        finishReason,
+        usage,
+        textLength: fullText.length
+      });
+
+      const memoryToolCalls = mapToolCallsForMemory(rawToolCalls as unknown[]);
 
       if (memoryToolCalls.length > 0) {
         console.log('[Chat] Tools used:', memoryToolCalls.map(tc => tc.name).join(', '));
+
+        for (const tc of memoryToolCalls) {
+          res.write(`event: tool\ndata: ${JSON.stringify({ 
+            tool: tc.name,
+            displayName: getToolDisplayName(tc.name),
+            arguments: tc.arguments 
+          })}\n\n`);
+        }
       }
 
+      // Save assistant message
       const assistantMessage: Message = {
         role: 'assistant',
-        content: responseText,
+        content: fullText,
         timestamp: new Date(),
         toolCalls: memoryToolCalls
       };
       await memoryStore.addMessage(threadId, assistantMessage);
 
-      if (memoryToolCalls.length > 0) {
-        for (const tc of memoryToolCalls) {
-          sseService.sendStatus(res, 'tool_use', `🔧 ${getToolDisplayName(tc.name)}...`, tc.name);
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      }
+      res.write(`event: complete\ndata: ${JSON.stringify({ 
+        text: fullText,
+        threadId,
+        toolCalls: memoryToolCalls,
+        usage,
+        finishReason
+      })}\n\n`);
 
-      sseService.sendStatus(res, 'generating', '✍️ Generating response...');
-      await sseService.streamTextChunks(res, responseText);
-      sseService.sendComplete(res, responseText, memoryToolCalls as any, threadId);
-      
+      res.write(`event: end\ndata: ${JSON.stringify({ status: 'ended' })}\n\n`);
+      res.end();
+
     } catch (agentError) {
       console.error('Agent error:', agentError);
-      sseService.sendError(
-        res,
-        'Agent processing error',
-        agentError instanceof Error ? agentError.message : 'Unknown agent error'
-      );
+      
+      res.write(`event: error\ndata: ${JSON.stringify({ 
+        error: 'Agent processing error',
+        message: agentError instanceof Error ? agentError.message : 'Unknown agent error'
+      })}\n\n`);
+      
+      res.write(`event: end\ndata: ${JSON.stringify({ status: 'ended' })}\n\n`);
+      res.end();
     }
-
-    sseService.sendEnd(res);
 
   } catch (error) {
     console.error('Error in /api/chat:', error);
@@ -119,12 +164,13 @@ router.post('/', async (req: Request, res: Response) => {
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     } else {
-      sseService.sendError(
-        res,
-        'Internal server error',
-        error instanceof Error ? error.message : 'Unknown error'
-      );
-      sseService.sendEnd(res);
+      res.write(`event: error\ndata: ${JSON.stringify({ 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      })}\n\n`);
+      
+      res.write(`event: end\ndata: ${JSON.stringify({ status: 'ended' })}\n\n`);
+      res.end();
     }
   }
 });

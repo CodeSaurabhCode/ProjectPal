@@ -1,4 +1,5 @@
 import { marked } from 'marked';
+import { ChatTemplates } from './templates';
 
 class ChatApp {
 	private messagesContainer: HTMLElement;
@@ -146,6 +147,8 @@ class ChatApp {
 			let assistantMessageId: string | null = null;
 			let fullResponse = '';
 			let statusIndicatorId: string | null = null;
+			let thinkingProcessId: string | null = null;
+			let currentEvent = '';
 
 			this.removeTypingIndicator(typingId);
 
@@ -157,7 +160,9 @@ class ChatApp {
 				const lines = chunk.split('\n');
 
 				for (const line of lines) {
-					if (line.startsWith('data: ')) {
+					if (line.startsWith('event: ')) {
+						currentEvent = line.slice(7).trim();
+					} else if (line.startsWith('data: ')) {
 						const eventData = line.slice(6).trim();
 						if (eventData === '[DONE]') {
 							return;
@@ -165,14 +170,23 @@ class ChatApp {
 						try {
 							const parsed = JSON.parse(eventData);
 
-							if (parsed.type === 'status') {
+							if (currentEvent === 'connected') {
+								console.log('✅ Connected to chat stream');
+							}
+							else if (currentEvent === 'status') {
+								if (parsed.status === 'thinking') {
+									if (!thinkingProcessId) {
+										thinkingProcessId = this.addSimpleThinkingIndicator();
+									}
+								}
+								
 								if (statusIndicatorId) {
-									this.updateStatusIndicator(statusIndicatorId, parsed.message, parsed.status, parsed.tool);
+									this.updateStatusIndicator(statusIndicatorId, parsed.message, parsed.status);
 								} else {
-									statusIndicatorId = this.addStatusIndicator(parsed.message, parsed.status, parsed.tool);
+									statusIndicatorId = this.addStatusIndicator(parsed.message, parsed.status);
 								}
 							}
-							else if (parsed.type === 'chunk' && parsed.content) {
+							else if (currentEvent === 'chunk') {
 								if (statusIndicatorId) {
 									this.removeStatusIndicator(statusIndicatorId);
 									statusIndicatorId = null;
@@ -181,11 +195,30 @@ class ChatApp {
 								if (!assistantMessageId) {
 									assistantMessageId = this.addMessage('', 'assistant');
 								}
-								
-								fullResponse += parsed.content;
+
+								const chunkText = parsed.chunk || '';
+								fullResponse += chunkText;
 								this.updateMessage(assistantMessageId, fullResponse);
 							}
-							else if (parsed.type === 'complete') {
+							else if (currentEvent === 'tool') {
+								const toolName = parsed.displayName || parsed.tool;
+								console.log(`🔧 Tool used: ${toolName}`);
+								console.log('🔧 Adding tool badge for:', toolName);
+								
+								if (thinkingProcessId) {
+									this.addToolUsageBadge(thinkingProcessId, toolName);
+									console.log('🔧 Tool badge added!');
+								} else {
+									console.warn('⚠️ No thinking indicator exists yet, creating one...');
+									thinkingProcessId = this.addSimpleThinkingIndicator();
+									this.addToolUsageBadge(thinkingProcessId, toolName);
+								}
+								
+								if (statusIndicatorId) {
+									this.updateStatusIndicator(statusIndicatorId, `Using ${toolName}...`, 'tool_use');
+								}
+							}
+							else if (currentEvent === 'complete') {
 								if (parsed.threadId) {
 									this.currentThreadId = parsed.threadId;
 									console.log('💾 Thread ID saved:', this.currentThreadId);
@@ -195,15 +228,40 @@ class ChatApp {
 									this.removeStatusIndicator(statusIndicatorId);
 									statusIndicatorId = null;
 								}
-								
-								if (!assistantMessageId) {
-									assistantMessageId = this.addMessage(parsed.response, 'assistant');
-								} else {
-									this.updateMessage(assistantMessageId, parsed.response);
+
+							if (thinkingProcessId && thinkingProcessId.startsWith('simple-thinking-')) {
+								setTimeout(() => {
+									const thinkingDiv = document.getElementById(thinkingProcessId!);
+									if (thinkingDiv) {
+										thinkingDiv.classList.add('fade-out');
+										setTimeout(() => thinkingDiv.remove(), 500);
+									}
+								}, 2000);
+							}								if (parsed.text) {
+									if (!assistantMessageId) {
+										assistantMessageId = this.addMessage(parsed.text, 'assistant');
+									} else {
+										this.updateMessage(assistantMessageId, parsed.text);
+									}
+								}
+
+								if (parsed.usage) {
+									console.log('📊 Token usage:', parsed.usage);
 								}
 							}
+							else if (currentEvent === 'error') {
+								console.error('❌ Error:', parsed.message);
+								if (statusIndicatorId) {
+									this.removeStatusIndicator(statusIndicatorId);
+									statusIndicatorId = null;
+								}
+								this.addMessage(`Error: ${parsed.message}`, 'assistant');
+							}
+							else if (currentEvent === 'end') {
+								console.log('✅ Stream ended');
+							}
 						} catch (e) {
-							console.warn('Failed to parse SSE data:', eventData);
+							console.warn('Failed to parse SSE data:', eventData, e);
 						}
 					}
 				}
@@ -226,10 +284,9 @@ class ChatApp {
 
 		const avatar = document.createElement('div');
 		avatar.className = 'message-avatar';
-		avatar.innerHTML =
-			type === 'user'
-				? '<i class="fas fa-user"></i>'
-				: '<i class="fas fa-robot"></i>';
+		avatar.innerHTML = type === 'user' 
+			? ChatTemplates.userAvatar() 
+			: ChatTemplates.assistantAvatar();
 
 		const contentDiv = document.createElement('div');
 		contentDiv.className = 'message-content';
@@ -238,11 +295,7 @@ class ChatApp {
 		} else {
 			if (type === 'assistant') {
 				contentDiv.classList.add('skeleton-loading');
-				contentDiv.innerHTML = `
-					<div class="skeleton-line skeleton-line-1"></div>
-					<div class="skeleton-line skeleton-line-2"></div>
-					<div class="skeleton-line skeleton-line-3"></div>
-				`;
+				contentDiv.innerHTML = ChatTemplates.skeletonLoading();
 			} else {
 				contentDiv.classList.add('empty');
 			}
@@ -309,11 +362,8 @@ class ChatApp {
 		const typingDiv = document.createElement('div');
 		typingDiv.className = 'typing-indicator';
 		typingDiv.id = typingId;
-		typingDiv.innerHTML = `
-			<div class="typing-dots">
-				<span></span><span></span><span></span>
-			</div>
-		`;
+		typingDiv.innerHTML = ChatTemplates.typingIndicator();
+		
 		this.messagesContainer.appendChild(typingDiv);
 		this.scrollToBottom();
 		return typingId;
@@ -398,6 +448,45 @@ class ChatApp {
 		if (statusDiv) {
 			statusDiv.remove();
 		}
+	}
+
+	private addSimpleThinkingIndicator(): string {
+		console.log('📝 addSimpleThinkingIndicator() called');
+		const thinkingId = 'simple-thinking-' + Date.now();
+		const thinkingDiv = document.createElement('div');
+		thinkingDiv.className = 'simple-thinking-indicator';
+		thinkingDiv.id = thinkingId;
+		
+		thinkingDiv.innerHTML = ChatTemplates.thinkingIndicator(thinkingId);
+		
+		this.messagesContainer.appendChild(thinkingDiv);
+		console.log('📝 Thinking indicator appended to DOM with ID:', thinkingId);
+		this.scrollToBottom();
+		return thinkingId;
+	}
+
+	private addToolUsageBadge(thinkingId: string, toolName: string): void {
+		console.log('🏷️ addToolUsageBadge() called for:', toolName, 'in container:', thinkingId);
+		const badgesContainer = document.getElementById(`${thinkingId}-badges`);
+		if (!badgesContainer) {
+			console.error('❌ Badges container not found:', `${thinkingId}-badges`);
+			return;
+		}
+		
+		console.log('🏷️ Badges container found, creating badge...');
+		const badge = document.createElement('span');
+		badge.className = 'tool-badge';
+		badge.innerHTML = ChatTemplates.toolBadge(toolName, 'processing');
+		
+		badgesContainer.appendChild(badge);
+		console.log('🏷️ Badge appended to container');
+		this.scrollToBottom();
+
+		setTimeout(() => {
+			console.log('✅ Marking badge as completed:', toolName);
+			badge.classList.add('completed');
+			badge.innerHTML = ChatTemplates.toolBadge(toolName, 'completed');
+		}, 1000);
 	}
 
 	private setInputDisabled(disabled: boolean): void {
