@@ -210,6 +210,8 @@ sequenceDiagram
 - Events: `connected`, `status`, `chunk`, `tool`, `complete`, `end`
 
 **RAG Pipeline (Document Intelligence):**
+- **Initial Setup:** PM Handbook (`backend/docs/PM_handbook.txt`) is automatically embedded on first server start
+- **Auto-Initialization:** Server checks for existing embeddings and creates them if missing
 - **Upload:** Drop .txt/.md files in PM Handbook tab
 - **Processing:** Automatic chunking (4000 chars, 500 overlap)
 - **Embedding:** OpenAI text-embedding-3-small (1536 dims)
@@ -217,6 +219,21 @@ sequenceDiagram
 - **Query:** Vector search <20ms latency
 - **Best Use:** PM policies, procedures, handbooks, technical docs
 - **Cost:** $0-2/month (vs $40+ alternatives)
+
+**PM Handbook Auto-Embedding:**
+When you start the backend server (`npm run server`), the system automatically:
+1. Checks if PM Handbook embeddings exist
+2. Loads `backend/docs/PM_handbook.txt` (48K+ characters of PM policies)
+3. Creates 14 intelligent chunks with 500-char overlap
+4. Generates OpenAI embeddings and stores them in the vector database
+5. Makes the handbook instantly searchable via the RAG tool
+
+You can immediately ask questions like:
+- "What's the budget approval process?"
+- "How do I manage project risks?"
+- "What are the quality assurance standards?"
+
+The embeddings are created once and reused on subsequent server starts.
 
 ---
 
@@ -254,6 +271,7 @@ VECTOR_STORAGE_TYPE=local               # 'local' for local dev
 ```powershell
 npm run server:dev
 # ✅ Server running on http://localhost:3001
+# 📚 PM Handbook embeddings auto-initialized on first run
 ```
 
 **4. Setup Frontend** (new terminal)
@@ -276,7 +294,16 @@ start http://localhost:4321
 ✅ Frontend loads at http://localhost:4321  
 ✅ Backend health check: `curl http://localhost:3001/api/health`  
 ✅ Send a chat message and get AI response  
+✅ PM Handbook embeddings initialized (check server logs)  
 ✅ No errors in browser console (F12)
+
+**Test PM Handbook RAG:**
+After starting the server, try asking:
+- "What's the budget approval threshold?"
+- "How do I handle project risks?"
+- "What are the communication guidelines?"
+
+The AI will answer using the pre-loaded PM Handbook knowledge base!
 
 ### Common Issues
 
