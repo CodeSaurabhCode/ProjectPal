@@ -10,3 +10,4 @@ terraform/tfplan
 # Add crash logs
 crash.log
 crash.*.log
+docs/

@@ -3,6 +3,7 @@ import multer from 'multer';
 import { DocumentStorageService } from '../services/DocumentStorageService';
 import { RAGService } from '../services/RAGService';
 import { DocumentTrackingService } from '../services/DocumentTrackingService';
+import { DocumentParserService } from '../services/DocumentParserService';
 
 const router = Router();
 
@@ -18,12 +19,17 @@ const upload = multer({
       'application/msword',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'text/markdown',
+      'text/x-markdown',
     ];
 
-    if (allowedTypes.includes(file.mimetype)) {
+    const allowedExtensions = ['.txt', '.pdf', '.doc', '.docx', '.md', '.markdown'];
+    const fileExtension = file.originalname.toLowerCase().substring(file.originalname.lastIndexOf('.'));
+
+    if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only text, PDF, and Word documents are allowed.'));
+      console.log(`[DocumentAPI] Rejected file: ${file.originalname} (MIME: ${file.mimetype})`);
+      cb(new Error('Invalid file type. Only text, PDF, and Markdown documents are allowed.'));
     }
   },
 });
@@ -45,16 +51,30 @@ router.post('/upload', upload.single('document'), async (req: Request, res: Resp
     console.log('[DocumentAPI] Document uploaded:', documentMetadata.id);
 
     let textContent: string;
-    if (req.file.mimetype === 'text/plain' || req.file.mimetype === 'text/markdown') {
-      textContent = req.file.buffer.toString('utf-8');
-    } else {
+    try {
+      textContent = await DocumentParserService.extractText(
+        req.file.buffer,
+        req.file.mimetype,
+        req.file.originalname
+      );
+    } catch (parseError) {
+      console.error('[DocumentAPI] Error parsing document:', parseError);
       return res.status(400).json({ 
-        error: 'PDF and DOCX parsing not yet implemented. Please upload .txt or .md files for now.',
+        error: parseError instanceof Error ? parseError.message : 'Failed to parse document',
         document: documentMetadata 
       });
     }
 
-    console.log('[DocumentAPI] Processing document with Mastra RAG...');
+    const validation = DocumentParserService.validateExtractedText(textContent, req.file.originalname);
+    if (!validation.valid) {
+      return res.status(400).json({
+        error: validation.error,
+        document: documentMetadata
+      });
+    }
+
+    console.log(`[DocumentAPI] Extracted ${textContent.length} characters from ${req.file.originalname}`);
+    console.log('[DocumentAPI] Processing document with RAG...');
     const stats = await RAGService.processDocument(textContent, documentMetadata.id, {
       maxSize: 4000,
       overlap: 500,
@@ -76,6 +96,7 @@ router.post('/upload', upload.single('document'), async (req: Request, res: Resp
         chunks: stats.totalChunks,
         embeddings: stats.totalEmbeddings,
         processingTime: stats.processingTime,
+        textLength: textContent.length,
       },
     });
   } catch (error) {

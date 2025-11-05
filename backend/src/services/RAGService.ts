@@ -18,7 +18,7 @@ export interface ProcessingStats {
   totalChunks: number;
   totalEmbeddings: number;
   processingTime: number;
-  chunkIds: string[]; // IDs of chunks in vector store
+  chunkIds: string[];
 }
 
 export interface SearchResult {
@@ -120,7 +120,7 @@ export class RAGService {
         metadata: r.metadata,
       }));
     
-    console.log(`[RAGService] Found ${filteredResults.length} results above threshold ${threshold}`);
+    console.log(`[RAGService] Found ${filteredResults.length} results above threshold from database`);
     
     return filteredResults;
   }

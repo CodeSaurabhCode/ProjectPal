@@ -82,26 +82,26 @@ EXAMPLE QUERIES:
         };
       }
       
-      console.log('[Policy Search Tool] Query:', query);
+      console.log('[RAG Tool] Query:', query);
 
       const searchResults = await RAGService.search(query, {
         indexName: 'pm-handbook',
-        topK: 5,
+        topK: 5,  
         threshold: 0.4,
       });
       
-      console.log(`[Policy Search Tool] Found ${searchResults.length} relevant chunks`);
+      console.log(`[RAG Tool] Found ${searchResults.length} relevant chunks`);
 
       if (searchResults.length === 0) {
         return {
           answer: `No information found for "${query}". 
 
-Try:
-- Rephrasing with more specific terms
-- Including relevant details (amounts, roles, metrics)
-- Using different keywords
+          Try:
+          - Rephrasing with more specific terms
+          - Including relevant details (amounts, roles, metrics)
+          - Using different keywords
 
-Common topics: budget policies, resource allocation, project procedures, quality standards, risk management, compliance requirements.`,
+          Common topics: budget policies, resource allocation, project procedures, quality standards, risk management, compliance requirements.`,
           sources: [],
           searchMethod: 'vector',
           totalChunks: 0
@@ -126,7 +126,7 @@ Common topics: budget policies, resource allocation, project procedures, quality
       };
       
     } catch (error) {
-      console.error('[Policy Search Tool] Error:', error);
+      console.error('[RAG Tool] Error:', error);
       
       return {
         answer: `Error searching policy documents: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`,

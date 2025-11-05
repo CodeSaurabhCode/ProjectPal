@@ -80,7 +80,6 @@ router.post('/', async (req: Request, res: Response) => {
         { role: 'user', content: contextualMessage }
       ]);
 
-      const toolCalls: any[] = [];
       let fullText = '';
 
       res.write(`event: status\ndata: ${JSON.stringify({ 

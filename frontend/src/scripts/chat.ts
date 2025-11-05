@@ -486,7 +486,7 @@ class ChatApp {
 			console.log('✅ Marking badge as completed:', toolName);
 			badge.classList.add('completed');
 			badge.innerHTML = ChatTemplates.toolBadge(toolName, 'completed');
-		}, 1000);
+		}, 5000);
 	}
 
 	private setInputDisabled(disabled: boolean): void {
